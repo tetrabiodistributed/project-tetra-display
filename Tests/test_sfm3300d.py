@@ -19,6 +19,9 @@ class TestFlowSensor(unittest.TestCase):
         self._sensor.close()
         self._mux.close()
 
+    @unittest.skipIf(not is_on_raspberry_pi(),
+                     "The serial number won't be valid unless this "
+                     "is run on hardware.")
     def test_serial_number(self):
         serial_number = self._sensor.serial_number()
         self.assertTrue(0 <= serial_number < 2**32,
@@ -88,10 +91,16 @@ class TestCommunicator(unittest.TestCase):
         self._communicator.close()
         self._mux.close()
 
+    @unittest.skipIf(not is_on_raspberry_pi(),
+                     "The sensor isn't going to be present unless this "
+                     "is run on hardware.")
     def test_is_present(self):
         self.assertTrue(self._communicator.is_present(),
                         "Sensor is not useable at the moment.")
 
+    @unittest.skipIf(not is_on_raspberry_pi(),
+                     "The serial number won't be valid unless this "
+                     "is run on hardware.")
     def test_serial_number(self):
         serial_number = self._communicator.serial_number()
         self.assertTrue(0 <= serial_number < 2**32,

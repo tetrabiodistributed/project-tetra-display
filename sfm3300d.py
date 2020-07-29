@@ -86,7 +86,6 @@ class Communicator():
         self._i2c = I2CInterface(SensorConstants.ADDRESS,
                                  dump_communication=dump_communication)
         if SensorConstants.ADDRESS in self._i2c.scan():
-            print("reset")
             self._reset()
             self._sensor_available = True
         else:
@@ -138,9 +137,6 @@ class Communicator():
             flow_bytes = (
                 self._i2c.read_data(SensorConstants.MEASUREMENT_BYTES))
             flow_measurement = bytearray(flow_bytes[0:2])
-            print("I am the very model")
-            print(self._crc8(flow_measurement))
-            print(flow_bytes[2])
             if self._crc8(flow_measurement) != flow_bytes[2]:
                 raise CRCError("Data fails CRC8 validation.")
             else:
