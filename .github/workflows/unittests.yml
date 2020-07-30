@@ -1,0 +1,22 @@
+name: Run Python unittests
+
+on:
+  push:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout GitHub workspace
+        uses: actions/checkout@v2
+
+      - name: Setup Python environment
+        uses: actions/setup-python@v2
+        with: 
+          python-version: '3.6'
+
+      - name: Activate venv, install dependencies, & run tests
+        run: |
+          ./setup.sh
+          source ./venv/bin/activate 
+          ./runtests.sh
