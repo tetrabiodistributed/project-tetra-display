@@ -200,7 +200,6 @@ else:
         def tubes_with_enough_sensors(self):
             tubes = []
             sensors = self.connected_sensors()
-            print(sensors)
             for i in range(constants.NUMBER_OF_PATIENTS):
                 if (constants.PRESSURE_SENSOR in sensors[i]
                     and (constants.SENSIRION_SENSOR in sensors[i]
