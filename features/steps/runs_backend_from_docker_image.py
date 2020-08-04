@@ -18,12 +18,25 @@ def step_impl(context, port):
     time.sleep(1.2)  # give the container a moment to start up
 
 
+def ws_connect_retry(uri):
+    for i in range(10):
+        try:
+            ws = websocket.create_connection(uri)
+            return ws
+        except Exception as e:
+            if not isinstance(e, KeyboardInterrupt):
+                time.sleep(.1)
+            else:
+                raise
+    raise Exception("Could not do the thing")
+
+
 @then("there will be a JSON packet sent every {t:f} seconds")
 def step_impl(context, t):
     number_of_messages = 5
     uri = f"ws://localhost:{context.port}/ws"
     start_time = time.time()
-    ws = websocket.create_connection(uri)
+    ws = ws_connect_retry(uri)
     for _ in range(number_of_messages):
         context.message = ws.recv()
     end_time = time.time()
