@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. ./env.sh
+. $(dirname "$0")/env.sh
 
 echo "Behaviour Tests:"
 ${VENV_BINDIR}/behave
