@@ -1,6 +1,8 @@
 #!/bin/sh
 
+. ./env.sh
+
 echo "Behaviour Tests:"
-behave
+${VENV_BINDIR}/behave
 echo $'\nUnit Tests:'
-python3 -m unittest
+${VENV_BINDIR}/python3 -m unittest
