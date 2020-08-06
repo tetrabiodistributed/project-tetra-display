@@ -7,7 +7,7 @@ VENV_NAME=venv
 VENV_BINDIR=${VENV_NAME}/bin
 
 if ! [ -f ${VENV_BINDIR}/pip3 ]; then
-    python3 -m venv ${VENV_NAME}
+    python3 -m venv ${VENV_NAME} || echo "Cannot create virtualenv ${VENV_NAME}" 1>&2
 fi
 
 ${VENV_BINDIR}/pip3 install pip --upgrade
