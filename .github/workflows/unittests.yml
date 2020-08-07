@@ -14,4 +14,4 @@ jobs:
         run: |
           sudo apt-get install python3-venv
           ./setup.sh
-          run: ./runtests.sh
+          ./runtests.sh
