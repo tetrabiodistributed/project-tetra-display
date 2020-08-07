@@ -10,5 +10,8 @@ jobs:
       - name: Checkout GitHub workspace
         uses: actions/checkout@v2
 
-      - name: Install python, activate venv, install dependencies, & run tests all in docker container
-        run: sudo docker run --rm -v $PWD:/src -w "/src" ubuntu:latest bash -c "apt update && apt -y upgrade && apt install -y python3-pip python3-venv && ./setup.sh && source ./venv/bin/activate && ./runtests.sh"
+      - name: Install python, activate venv, install dependencies, & run tests
+        run: ./setup.sh
+        run: . venv/bin/activate
+        run: ./runtests.sh
+        run: deactivate
