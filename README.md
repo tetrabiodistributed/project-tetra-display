@@ -1,6 +1,8 @@
 Ventilator Splitter Display
 ===========================
 
+https://github.com/tetrabiodistributed/project-tetra-display/workflow/run-python-tests/badge.svg
+
 A system to take pressure and flow data from sensors on a ventilator splitter, calculate descriptive parameters based on these data like PEEP or Tidal Volume, and display them for medical professionals to monitor.  This is for use against COVID-19.
 
 To set it up for tests, run `./setup.sh` to build the virtual environment and then `source ./venv/bin/activate` to activate it.  To do the tests, run `./runtests.sh`.  This will first show the results of unit tests and then behaviour tests.
