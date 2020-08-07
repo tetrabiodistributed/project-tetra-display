@@ -1,7 +1,7 @@
 Ventilator Splitter Display
 ===========================
 
-https://github.com/tetrabiodistributed/project-tetra-display/workflow/run-python-tests/badge.svg
+https://github.com/tetrabiodistributed/project-tetra-display/workflows/run-python-tests/badge.svg
 
 A system to take pressure and flow data from sensors on a ventilator splitter, calculate descriptive parameters based on these data like PEEP or Tidal Volume, and display them for medical professionals to monitor.  This is for use against COVID-19.
 
