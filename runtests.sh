@@ -1,16 +1,18 @@
 #!/bin/sh
 
-HIGHLIGHT='\033[0;33m'
-NO_COLOR='\033[0m'
-
-docker ps >/dev/null 2>&1 || {
-   printf "${HIGHLIGHT}An error was encountered in running the behave tests.\nThe docker daemon is not running.${NO_COLOR}"
-   exit 1
-}
-
 . venv/bin/activate
 echo "Behaviour Tests:"
 behave
+behave_exit_code=$?
 echo $'\nUnit Tests:'
 python3 -m unittest
+unittest_exit_code=$?
 deactivate
+
+if [ $behave_exit_code -ne 0 ]; then
+    echo "behave tests failed!"
+fi
+if [ $unittest_exit_code -ne 0 ]; then
+    echo "unittests tests failed!"
+fi
+exit $(($behave_exit_code + $unittest_exit_code))
