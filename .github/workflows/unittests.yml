@@ -1,0 +1,17 @@
+name: tests
+
+on:
+  push:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout GitHub workspace
+        uses: actions/checkout@v2
+
+      - name: Install python, activate venv, install dependencies, & run tests
+        run: |
+          sudo apt-get install python3-venv
+          ./setup.sh
+          ./runtests.sh
