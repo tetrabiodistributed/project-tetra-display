@@ -8,8 +8,9 @@ docker ps >/dev/null 2>&1 || {
    exit 1
 }
 
-
+. venv/bin/activate
 echo "Behaviour Tests:"
 behave
 echo $'\nUnit Tests:'
 python3 -m unittest
+deactivate
