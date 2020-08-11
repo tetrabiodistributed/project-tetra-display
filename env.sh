@@ -1,0 +1,2 @@
+VENV_NAME=venv
+VENV_BINDIR=${VENV_NAME}/bin
