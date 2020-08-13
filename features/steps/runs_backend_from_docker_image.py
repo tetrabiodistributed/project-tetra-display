@@ -1,10 +1,10 @@
 from behave import given, when, then
 import math
-import websocket
 import json
 import time
 
 import constants
+from basic_websocket import ws_connect_retry
 
 
 @given("A running Docker image on port {port}")
@@ -16,19 +16,6 @@ def step_impl(context, port):
                                   auto_remove=True,
                                   ports={f"{context.port}": context.port})
     time.sleep(1.2)  # give the container a moment to start up
-
-
-def ws_connect_retry(uri):
-    for i in range(10):
-        try:
-            ws = websocket.create_connection(uri)
-            return ws
-        except Exception as e:
-            if not isinstance(e, KeyboardInterrupt):
-                time.sleep(.1)
-            else:
-                raise
-    raise Exception("Could not do the thing")
 
 
 @then("there will be a JSON packet sent every {t:f} seconds")
