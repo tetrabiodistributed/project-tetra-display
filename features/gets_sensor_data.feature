@@ -7,7 +7,6 @@ Feature: gets data from sensors
         Then the software will determine which tubes have both pressure and airflow sensing
         Then the software will return the state of the sensor to the user.
 
-    @wip
     Scenario: there are not enough sensors
         Given there is an object that represent the total sensing package
         And any tube doesn't have a complete set of working sensors
