@@ -1,4 +1,8 @@
+from behave.fixture import use_fixture_by_tag
+
 import docker
+
+from features.fixtures import browser_chrome
 
 
 def before_all(context):
