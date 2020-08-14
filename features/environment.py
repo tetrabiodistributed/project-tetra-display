@@ -9,16 +9,8 @@ def before_all(context):
                                                 tag=context.container_tag)
 
 
-def after_all(context):
+def after_scenario(context, step):
     try:
         context.client.containers.get(context.container_name).kill()
     except docker.errors.NotFound:
         pass
-
-
-def after_step(context, step):
-    if step.status == "failed":
-        try:
-            context.client.containers.get(context.container_name).kill()
-        except docker.errors.NotFound:
-            pass
