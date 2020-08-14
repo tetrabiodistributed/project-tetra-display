@@ -310,7 +310,7 @@ class Communicator():
 
         elif mode == PressureSensor.OpMode.background:
             self._i2c.write_register(
-                SensorConstants.SENSOR_OP_MODE,
+                SensorConstants.MEAS_CFG,
                 SensorConstants.BACKGROUND_PRESSURE_TEMPERATURE
             )
             self._op_mode = PressureSensor.OpMode.background
@@ -324,7 +324,7 @@ class Communicator():
             set_standby = True
         if set_standby:
             self._i2c.write_register(
-                SensorConstants.SENSOR_OP_MODE, SensorConstants.STANDBY)
+                SensorConstants.MEAS_CFG, SensorConstants.STANDBY)
             self._op_mode = PressureSensor.OpMode.standby
             return PressureSensor.OpMode.standby
 
@@ -377,20 +377,20 @@ class Communicator():
         except KeyError:
             raise ValueError("Pressure oversampling can only be "
                              "1, 2, 4, 8, 16, 32, 64, or 128X")
-        self._i2c.write_register(SensorConstants.PRESSURE_CONFIGURATION,
+        self._i2c.write_register(SensorConstants.PRS_CFG,
                                  rate_mode | oversample_mode)
         if oversample > 8:
             self._i2c.write_register(
-                SensorConstants.INTERRUPT_AND_FIFO_CONFIGURATION,
+                SensorConstants.CFG_REG,
                 SensorConstants.PRESSURE_RESULT_BIT_SHIFT
             )
         else:
             new_interrupt_and_fifo_config_state = (
                 self._i2c.read_register(
-                    SensorConstants.INTERRUPT_AND_FIFO_CONFIGURATION
+                    SensorConstants.CFG_REG
                 ) & (0xff - SensorConstants.PRESSURE_RESULT_BIT_SHIFT))
             self._i2c.write_register(
-                SensorConstants.INTERRUPT_AND_FIFO_CONFIGURATION,
+                SensorConstants.CFG_REG,
                 new_interrupt_and_fifo_config_state
             )
 
@@ -400,21 +400,21 @@ class Communicator():
         """
         if self._op_mode == PressureSensor.OpMode.command:
             self._i2c.write_register(
-                SensorConstants.SENSOR_OP_MODE,
+                SensorConstants.MEAS_CFG,
                 SensorConstants.COMMAND_PRESSURE
             )
 
         def pressure_ready():
-            return (self._i2c.read_register(SensorConstants.SENSOR_OP_MODE)
+            return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.PRS_RDY != 0)
         self._wait_for_condition_else_timeout(pressure_ready, 4)
 
         pressure_msb = self._i2c.read_register(
-            SensorConstants.PRESSURE_MSB)
+            SensorConstants.PRS_B2)
         pressure_lsb = self._i2c.read_register(
-            SensorConstants.PRESSURE_LSB)
+            SensorConstants.PRS_B1)
         pressure_xlsb = self._i2c.read_register(
-            SensorConstants.PRESSURE_XLSB)
+            SensorConstants.PRS_B0)
 
         pressure = self._twos_complement(((pressure_msb << 16)
                                           + (pressure_lsb << 8)
@@ -459,20 +459,20 @@ class Communicator():
         except KeyError:
             raise ValueError("Temperature oversampling can only be "
                              "1, 2, 4, 8, 16, 32, 64, or 128X")
-        self._i2c.write_register(SensorConstants.TEMPERATURE_CONFIGURATION,
+        self._i2c.write_register(SensorConstants.TMP_CFG,
                                  rate_mode | oversample_mode)
         if oversample > 8:
             self._i2c.write_register(
-                SensorConstants.INTERRUPT_AND_FIFO_CONFIGURATION,
+                SensorConstants.CFG_REG,
                 SensorConstants.TEMPERATURE_RESULT_BIT_SHIFT
             )
         else:
             new_interrupt_and_fifo_config_state = (
                 self._i2c.read_register(
-                    SensorConstants.INTERRUPT_AND_FIFO_CONFIGURATION)
+                    SensorConstants.CFG_REG)
             ) & (0xff - SensorConstants.TEMPERATURE_RESULT_BIT_SHIFT)
             self._i2c.write_register(
-                SensorConstants.INTERRUPT_AND_FIFO_CONFIGURATION,
+                SensorConstants.CFG_REG,
                 new_interrupt_and_fifo_config_state
             )
 
@@ -481,20 +481,20 @@ class Communicator():
         be scaled and compensated per the data sheet to be useful.
         """
         if self._op_mode == PressureSensor.OpMode.command:
-            self._i2c.write_register(SensorConstants.SENSOR_OP_MODE,
+            self._i2c.write_register(SensorConstants.MEAS_CFG,
                                      SensorConstants.COMMAND_TEMPERATURE)
 
         def temperature_ready():
-            return (self._i2c.read_register(SensorConstants.SENSOR_OP_MODE)
+            return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.TMP_RDY != 0)
         self._wait_for_condition_else_timeout(temperature_ready, 4)
 
         temperature_msb = self._i2c.read_register(
-            SensorConstants.TEMPERATURE_MSB)
+            SensorConstants.TMP_B2)
         temperature_lsb = self._i2c.read_register(
-            SensorConstants.TEMPERATURE_LSB)
+            SensorConstants.TMP_B1)
         temperature_xlsb = self._i2c.read_register(
-            SensorConstants.TEMPERATURE_XLSB)
+            SensorConstants.TMP_B0)
         temperature = self._twos_complement(((temperature_msb << 16)
                                              + (temperature_lsb << 8)
                                              + temperature_xlsb),
@@ -520,7 +520,7 @@ class Communicator():
         {c0, c1} 12 bit 2´s complement numbers.
         """
         def coefficients_ready():
-            return (self._i2c.read_register(SensorConstants.SENSOR_OP_MODE)
+            return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.COEF_RDY != 0)
         self._wait_for_condition_else_timeout(coefficients_ready, 4)
 
@@ -579,12 +579,12 @@ class Communicator():
 
     def _reset_sensor(self):
         reset_time = 0.02
-        self._i2c.write_register(SensorConstants.RESET_AND_FLUSH,
+        self._i2c.write_register(SensorConstants.RESET,
                                  SensorConstants.SOFT_RESET)
         time.sleep(reset_time)
 
         def sensor_ready():
-            return (self._i2c.read_register(SensorConstants.SENSOR_OP_MODE)
+            return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.SENSOR_RDY != 0)
         self._wait_for_condition_else_timeout(sensor_ready, 4)
 
@@ -614,20 +614,20 @@ class SensorConstants():
     DEVICE_ADDRESS_SDO_LOW = 0x76
 
     # Register addresses
-    PRESSURE_MSB = 0x00
-    PRESSURE_LSB = 0x01
-    PRESSURE_XLSB = 0x02
-    TEMPERATURE_MSB = 0x03
-    TEMPERATURE_LSB = 0x04
-    TEMPERATURE_XLSB = 0x05
-    PRESSURE_CONFIGURATION = 0x06
-    TEMPERATURE_CONFIGURATION = 0x07
-    SENSOR_OP_MODE = 0x08
-    INTERRUPT_AND_FIFO_CONFIGURATION = 0x09
-    INTERRUPT_STATUS = 0x0A
-    FIFO_STATUS = 0x0B
-    RESET_AND_FLUSH = 0x0C
-    PRODUCT_AND_REVISION_ID = 0x0D
+    PRS_B2 = 0x00
+    PRS_B1 = 0x01
+    PRS_B0 = 0x02
+    TMP_B2 = 0x03
+    TMP_B1 = 0x04
+    TMP_B0 = 0x05
+    PRS_CFG = 0x06
+    TMP_CFG = 0x07
+    MEAS_CFG = 0x08
+    CFG_REG = 0x09
+    INT_STS = 0x0A
+    FIFO_STS = 0x0B
+    RESET = 0x0C
+    ID = 0x0D
     # Calibration Coefficient register addresses
     C0_11_4 = 0x10
     C0_3_0_C1_11_8 = 0x11
