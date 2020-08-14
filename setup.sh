@@ -11,6 +11,20 @@ fi
 ${VENV_BINDIR}/pip3 install pip --upgrade
 ${VENV_BINDIR}/pip3 install -r requirements.txt
 
-if ! command -v docker &> /dev/null; then
-    printf "\n${HIGHLIGHT}Please install Docker${NO_COLOR}"
+exit-value=0
+
+if docker -v > /dev/null 2>&1; then
+    :
+else
+    echo "${HIGHLIGHT}Please install docker${NO_COLOR}"
+    exit-value=$(($exit-value+1))
 fi
+
+if chromedriver -v > /dev/null 2>&1; then
+    :
+else
+    echo "${HIGHLIGHT}Please install chromedriver${NO_COLOR}"
+    exit-value=$((exit-value+1))
+fi
+
+exit $exit-value
