@@ -1,8 +1,9 @@
-from behave import given, when, then
+from behave import given, when, then, use_fixture
 import json
 import os
+import math
 
-import selenium
+from selenium import webdriver
 import docker
 
 import constants

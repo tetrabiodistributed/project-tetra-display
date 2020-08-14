@@ -16,8 +16,7 @@ def after_scenario(context, step):
         pass
 
 
-# -- REGISTRY DATA SCHEMA 1: fixture_func
-fixture_registry1 = {
+fixture_registry = {
     "fixture.browser.chrome":  browser_chrome,
 }
 

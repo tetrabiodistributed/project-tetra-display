@@ -1,6 +1,7 @@
 @wip
 Feature: Discriptors are drawn to the display
 
+    @fixture.browser.chrome
     Scenario: All value read 0.0
         Given a file named index.html exists in static/
         And a file named style.css exists in static/
@@ -15,6 +16,7 @@ Feature: Discriptors are drawn to the display
             | Flow Rate            | 0     |
         Then all the values in the display will correspond to that JSON packet
 
+    @fixture.browser.chrome
     Scenario: All values read 0.0 except patient 1 PEEP
         Given a file named index.html exists in static/
         And a file named style.css exists in static/
