@@ -28,6 +28,7 @@ def step_impl(context, t):
         context.message = ws.recv()
     end_time = time.time()
     context.json = json.loads(context.message)
+    context.client.containers.get(context.container_name).kill()
     assert math.isclose((end_time - start_time)/number_of_messages, t,
                         rel_tol=0.15), \
         "Fails to send packets at 1 Hz"

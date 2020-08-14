@@ -1,6 +1,9 @@
 from behave import given, when, then
 import json
 
+import selenium
+import docker
+
 import constants
 from basic_websocket import ws_connect_retry
 
@@ -12,11 +15,6 @@ def step_impl(context, file, static_directory):
             pass
     except FileNotFoundError:
         raise
-
-
-@given("a connection is established to draw to the webpage")
-def step_impl(context):
-    pass
 
 
 @when("I send a JSON packet where the top-level keys are "0"-number of "
