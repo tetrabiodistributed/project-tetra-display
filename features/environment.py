@@ -14,3 +14,14 @@ def after_scenario(context, step):
         context.client.containers.get(context.container_name).kill()
     except docker.errors.NotFound:
         pass
+
+
+# -- REGISTRY DATA SCHEMA 1: fixture_func
+fixture_registry1 = {
+    "fixture.browser.chrome":  browser_chrome,
+}
+
+
+def before_tag(context, tag):
+    if tag.startswith("fixture."):
+        return use_fixture_by_tag(tag, context, fixture_registry)
