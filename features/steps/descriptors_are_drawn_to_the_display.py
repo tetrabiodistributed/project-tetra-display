@@ -42,7 +42,17 @@ def step_impl(context):
 
 @then("all the values in the display will correspond to that JSON packet")
 def step_impl(context):
-    pass
+    context.browser.get("http://localhost:8000")
+    descriptor_labels = ("dP", "PEEP", "PIP", "Tv")
+    for i in range(constants.NUMBER_OF_PATIENTS):
+        for descriptor_label in descriptor_labels:
+            context.element = (
+                context.browser
+                   .find_element_by_xpath("//div[@class='_dataCell "
+                                          f"patient-{i} "
+                                          f"{descriptor_label}']"))
+            assert math.isclose(float(context.element.text), 0.0), \
+                f"patient-{i+1} {descriptor_label} is non-zero"
 
 
 @when("I send a JSON packet formatted for this display where the leave "
