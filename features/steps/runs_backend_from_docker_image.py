@@ -18,14 +18,18 @@ def step_impl(context, port):
     time.sleep(1.2)  # give the container a moment to start up
 
 
+@when("I listen for packets")
+def step_impl(context):
+    uri = f"ws://localhost:{context.port}/ws"
+    context.ws = ws_connect_retry(uri)
+
+
 @then("there will be a JSON packet sent every {t:f} seconds")
 def step_impl(context, t):
     number_of_messages = 5
-    uri = f"ws://localhost:{context.port}/ws"
     start_time = time.time()
-    ws = ws_connect_retry(uri)
     for _ in range(number_of_messages):
-        context.message = ws.recv()
+        context.message = context.ws.recv()
     end_time = time.time()
     context.json = json.loads(context.message)
     context.client.containers.get(context.container_name).kill()
