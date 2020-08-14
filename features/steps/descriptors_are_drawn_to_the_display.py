@@ -31,32 +31,48 @@ def step_impl(context):
 @when("I send a JSON packet where the top-level keys are '0'-number of "
       "patients and their values are this dictionary")
 def step_impl(context):
-    context.json = json.dumps({str(i): {row["key"]: row["value"]
-                                        for row in context.table}
-                               for i in range(constants.NUMBER_OF_PATIENTS)})
+    context.expected_values = {i: {row["key"]: row["value"]
+                                   for row in context.table}
+                               for i in range(constants.NUMBER_OF_PATIENTS)}
     context.client \
            .containers \
            .get(context.container_name) \
-           .exec_run(f"python3 zmq_test_server {str(context.json)}")
+           .exec_run("python3 zmq_test_server "
+                     f"{str(json.dumps(context.expected_values))}")
 
 
 @then("all the values in the display will correspond to that JSON packet")
 def step_impl(context):
     context.browser.get("http://localhost:8000")
-    descriptor_labels = ("dP", "PEEP", "PIP", "Tv")
+    classes_and_descriptors = {"dP": "Inspiratory Pressure",
+                               "PEEP": "PEEP",
+                               "PIP": "PIP",
+                               "Tv": "Tidal Volume"}
     for i in range(constants.NUMBER_OF_PATIENTS):
-        for descriptor_label in descriptor_labels:
+        for class_label, descriptor in classes_and_descriptors.items():
             context.element = (
                 context.browser
                    .find_element_by_xpath("//div[@class='_dataCell "
                                           f"patient-{i} "
-                                          f"{descriptor_label}']"))
-            assert math.isclose(float(context.element.text), 0.0), \
-                f"patient-{i+1} {descriptor_label} is non-zero"
+                                          f"{class_label}']"))
+            data_value = float(context.element.text)
+            expected_value = float(context.expected_values[i][descriptor])
+            assert math.isclose(data_value, expected_value), \
+                f"patient-{i} {class_label} is {data_value} when " \
+                f"{expected_value} is expected."
 
 
 @when("I send a JSON packet formatted for this display where the leave "
-      "values are all {value:f} except {descriptor} for patient "
+      "values are all {value:f} except {diff_descriptor} for patient "
       "{patient_number:d} which is {special_value:f}")
-def step_impl(context, value, descriptor, patient_number, special_value):
-    pass
+def step_impl(context, value, diff_descriptor, patient_number, special_value):
+    descriptors = ("Inspiratory Pressure", "PEEP", "PIP", "Tidal Volume")
+    context.expected_values = {i: {descriptor: value
+                                   for descriptor in descriptors}
+                               for i in range(constants.NUMBER_OF_PATIENTS)}
+    context.expected_values[patient_number][diff_descriptor] = special_value
+    context.client \
+           .containers \
+           .get(context.container_name) \
+           .exec_run("python3 zmq_test_server "
+                     f"{str(json.dumps(context.expected_values))}")
