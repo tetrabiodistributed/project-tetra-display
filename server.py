@@ -29,7 +29,7 @@ class Calculator():
     def get_datum(self):
         datum = {}
         for i in range(len(self._calculators)):
-            datum.update({i: self._calculators[i].descriptors})
+            datum.update({f"patient-{i}": self._calculators[i].descriptors})
         return datum
 
 
