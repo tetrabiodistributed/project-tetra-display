@@ -1,4 +1,8 @@
+from behave.fixture import use_fixture_by_tag
+
 import docker
+
+from features.fixtures import browser_chrome
 
 
 def before_all(context):
@@ -9,16 +13,18 @@ def before_all(context):
                                                 tag=context.container_tag)
 
 
-def after_all(context):
+def after_scenario(context, step):
     try:
         context.client.containers.get(context.container_name).kill()
     except docker.errors.NotFound:
         pass
 
 
-def after_step(context, step):
-    if step.status == "failed":
-        try:
-            context.client.containers.get(context.container_name).kill()
-        except docker.errors.NotFound:
-            pass
+fixture_registry = {
+    "fixture.browser.chrome":  browser_chrome,
+}
+
+
+def before_tag(context, tag):
+    if tag.startswith("fixture."):
+        return use_fixture_by_tag(tag, context, fixture_registry)
