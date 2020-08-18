@@ -2,7 +2,7 @@
 Feature: Discriptors are drawn to the display
 
     @fixture.browser.chrome
-    Scenario: All value read 0.0
+    Scenario: All values read 0.0
         Given a file named index.html exists in static/
         And a file named style.css exists in static/
         And A running Docker image on port 8000
