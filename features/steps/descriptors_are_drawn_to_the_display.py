@@ -70,3 +70,18 @@ def step_impl(context, value, diff_descriptor, patient_number, special_value):
            .get(context.container_name) \
            .exec_run("python3 zmq_test_server "
                      f"{str(json.dumps(context.expected_values))}")
+
+
+@then("{descriptor} for patient {patient_number:d} doesn't overflow")
+def step_impl(context, descriptor, patient_number):
+    context.browser.get("http://localhost:8000")
+    text_element = context.browser.find_element_by_xpath(
+        f"//div[@class='_dataCell patient-{patient_number} {descriptor}']")
+    client_width = text_element.get_property("clientWidth")
+    scroll_width = text_element.get_property("scrollWidth")
+    client_height = text_element.get_property("clientHeight")
+    scroll_height = text_element.get_property("scrollHeight")
+    assert ((client_width >= scroll_width)
+            and (client_height >= scroll_height)), \
+        (f"patient-{patient_number} {descriptor} is overflowing with "
+         f"text {text_element.text}")
