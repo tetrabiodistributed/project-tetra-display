@@ -1,5 +1,3 @@
-// Placeholder
-
 let socket = new WebSocket("ws://" + location.host + "/ws");
 
 socket.onopen = function (event) {
@@ -9,26 +7,17 @@ socket.onopen = function (event) {
 
 socket.onmessage = function (event) {
     console.log(JSON.parse(event.data));
-
     classes_and_descriptors = {"Inspiratory Pressure": "dP",
                                "PEEP": "PEEP",
                                "PIP": "PIP",
                                "Tidal Volume": "Tv"};
-
     data = JSON.parse(event.data);
-
     for (i = 0; i < 4; ++i) {
         for (const [key, value] of Object.entries(data["patient-" + i])) {
-            console.log(key);
             dataElement = getElementByXpath("//div[@class='_dataCell patient-" + i + " " + classes_and_descriptors[key] + "']");
             dataElement.innerHTML = value.toFixed(2);
         }
     }
-
-    var ul = document.getElementById("content");
-    var li = document.createElement("li");
-    li.appendChild(document.createTextNode(event.data));
-    ul.appendChild(li);
 }
 
 socket.onclose = function (event) {
