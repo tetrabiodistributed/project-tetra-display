@@ -8,7 +8,7 @@ socket.onopen = function (event) {
 };
 
 socket.onmessage = function (event) {
-    console.log(JSON.parse(event.data)["patient-0"]);
+    console.log(JSON.parse(event.data));
 
     classes_and_descriptors = {"Inspiratory Pressure": "dP",
                                "PEEP": "PEEP",
@@ -21,12 +21,10 @@ socket.onmessage = function (event) {
         for (const [key, value] of Object.entries(data["patient-" + i])) {
             console.log(key);
             dataElement = getElementByXpath("//div[@class='_dataCell patient-" + i + " " + classes_and_descriptors[key] + "']");
-            dataElement.innerHTML = value;
+            dataElement.innerHTML = value.toFixed(2);
         }
     }
 
-    var p1_peep = getElementByXpath("//div[@class='_dataCell patient-" + "0" + " " + "PEEP" + "']");
-    p1_peep.innerHTML = JSON.parse(event.data)["patient-0"]["PEEP"];
     var ul = document.getElementById("content");
     var li = document.createElement("li");
     li.appendChild(document.createTextNode(event.data));
