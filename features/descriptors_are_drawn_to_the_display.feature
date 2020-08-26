@@ -1,4 +1,3 @@
-@wip
 Feature: Discriptors are drawn to the display
 
     @fixture.browser.chrome
