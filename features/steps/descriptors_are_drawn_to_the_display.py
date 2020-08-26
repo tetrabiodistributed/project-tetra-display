@@ -1,5 +1,4 @@
 from behave import given, when, then
-import json
 import math
 import os
 
