@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# This is to install chromedriver on a CI/CD machine.  It might work
+# for a normal computer, but it might not.  Who knows.
+#
 # Please `sudo apt-get update` before running this script
 
 HIGHLIGHT='\033[0;33m'
