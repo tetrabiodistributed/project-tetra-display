@@ -9,11 +9,10 @@ Feature: Discriptors are drawn to the display
         And that docker image is ready to receive test data
         When I send a JSON packet where the top-level keys are '0'-number of patients and their values are this dictionary
             | key                  | value |
-            | Inspiratory Pressure | 0     |
-            | Tidal Volume         | 0     |
-            | PEEP                 | 0     |
-            | Peak Pressure        | 0     |
-            | Flow Rate            | 0     |
+            | Inspiratory Pressure | 0.0   |
+            | Tidal Volume         | 0.0   |
+            | PEEP                 | 0.0   |
+            | PIP                  | 0.0   |
         Then all the values in the display will correspond to that JSON packet
 
     @fixture.browser.chrome

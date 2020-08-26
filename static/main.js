@@ -6,18 +6,9 @@ socket.onopen = function (event) {
 };
 
 socket.onmessage = function (event) {
-    console.log(JSON.parse(event.data));
-    classes_and_descriptors = {"Inspiratory Pressure": "dP",
-                               "PEEP": "PEEP",
-                               "PIP": "PIP",
-                               "Tidal Volume": "Tv"};
-    data = JSON.parse(event.data);
-    for (i = 0; i < 4; ++i) {
-        for (const [key, value] of Object.entries(data["patient-" + i])) {
-            dataElement = getElementByXpath("//div[@class='_dataCell patient-" + i + " " + classes_and_descriptors[key] + "']");
-            dataElement.innerHTML = value.toFixed(2);
-        }
-    }
+    let data = JSON.parse(event.data)
+    console.log(data);
+    drawDataToPage(data)
 }
 
 socket.onclose = function (event) {
@@ -30,6 +21,20 @@ socket.onclose = function (event) {
 
 socket.onerror = function (event) {
     console.log("error: " + event.message)
+}
+
+function drawDataToPage(data) {
+    classes_and_descriptors = {"Inspiratory Pressure": "dP",
+                               "PEEP": "PEEP",
+                               "PIP": "PIP",
+                               "Tidal Volume": "Tv"};
+    for (i = 0; i < 4; ++i) {
+        for (const [key, value] of Object.entries(data["patient-" + i])) {
+            var descriptorMagnitude = Number(value).toFixed(2);
+            dataElement = getElementByXpath("//div[@class='_dataCell patient-" + i + " " + classes_and_descriptors[key] + "']");
+            dataElement.innerHTML = descriptorMagnitude;
+        }
+    }
 }
 
 function getElementByXpath(path) {
