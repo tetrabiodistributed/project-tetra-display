@@ -38,10 +38,11 @@ def step_impl(context, t):
         "Fails to send packets at 1 Hz"
 
 
-@then("that JSON packet will have several keys named with integers")
+@then("that JSON packet will have several keys named with "
+      "'patient-{0-index}'")
 def step_impl(context):
     for i in range(constants.NUMBER_OF_PATIENTS):
-        assert f"{i}" in context.json, \
+        assert f"patient-{i}" in context.json, \
             ("JSON packet doesn't have top-level keys formatted as "
              "expected.")
 
@@ -50,5 +51,5 @@ def step_impl(context):
 def step_impl(context):
     for i in range(constants.NUMBER_OF_PATIENTS):
         for row in context.table:
-            assert row["descriptor"] in context.json[f"{i}"], \
+            assert row["descriptor"] in context.json[f"patient-{i}"], \
                 "Patient descriptors aren't formatted as expected."
