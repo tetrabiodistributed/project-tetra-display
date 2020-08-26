@@ -12,6 +12,6 @@ jobs:
 
       - name: Install python, activate venv, install dependencies, & run tests
         run: |
-          sudo apt-get install python3-venv
+          sudo apt-get install python3-venv chromedriver
           ./setup.sh
           ./runtests.sh
