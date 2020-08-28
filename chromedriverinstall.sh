@@ -10,21 +10,15 @@ NO_COLOR='\033[0m'
 
 echo "${HIGHLIGHT}Installing chromedriver${NO_COLOR}"
 
-sudo apt-get install libxss1 libappindicator1 libindicator7
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-
-sudo dpkg -i google-chrome*.deb
-sudo apt-get install -f
-sudo apt-get install xvfb
-
-sudo apt-get install unzip
-
-wget -N http://chromedriver.storage.googleapis.com/2.26/chromedriver_linux64.zip
-unzip chromedriver_linux64.zip
-chmod +x chromedriver
-
-sudo mv -f chromedriver /usr/local/share/chromedriver
-sudo ln -s /usr/local/share/chromedriver /usr/local/bin/chromedriver
-sudo ln -s /usr/local/share/chromedriver /usr/bin/chromedriver
+set -xe \
+  && curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+  && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+  && apt-get update \
+  && apt-get install -y google-chrome-stable \
+  && rm -rf /var/lib/apt/lists/* \
+  && CD_VER=$(curl https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$(google-chrome --version | awk '{print $3}' | sed -r 's/\.[0-9]*$//'))
+  && wget https://chromedriver.storage.googleapis.com/$cd_ver/chromedriver_linux64.zip \
+  && unzip chromedriver_linux64.zip \
+  && mv /chromedriver /usr/bin/; \
 
 exit 0

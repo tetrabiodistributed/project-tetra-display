@@ -10,10 +10,12 @@ jobs:
       - name: Checkout GitHub workspace
         uses: actions/checkout@v2
 
-      - name: Install python and chromedriver, activate venv, install dependencies, & run tests
+      - name: Install dependencies and set up for the tests
         run: |
           sudo apt-get update
           sudo apt-get install python3-venv
           ./chromedriverinstall.sh
           ./setup.sh
-          ./runtests.sh
+
+      - name: Run tests
+        run: ./runtests.sh
