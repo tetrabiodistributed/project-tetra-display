@@ -4,7 +4,11 @@ from selenium import webdriver
 
 @fixture
 def browser_chrome(context, timeout=30, **kwargs):
-    context.browser = webdriver.Chrome()
+    opts = webdriver.ChromeOptions()
+    opts.add_argument('--disable-gpu')
+    opts.add_argument('--no-sandbox')
+    opts.add_argument('--headless')
+    context.browser = webdriver.Chrome(options=opts)
     yield context.browser
     context.browser.close()
 
