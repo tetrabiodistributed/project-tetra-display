@@ -16,7 +16,7 @@ set -xe \
   && apt-get update \
   && apt-get install -y google-chrome-stable \
   && rm -rf /var/lib/apt/lists/* \
-  && CD_VER=$(curl https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$(google-chrome --version | awk '{print $3}' | sed -r 's/\.[0-9]*$//'))
+  && CD_VER=$(curl https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$(google-chrome --version | awk '{print $3}' | sed -r 's/\.[0-9]*$//')) \
   && wget https://chromedriver.storage.googleapis.com/$cd_ver/chromedriver_linux64.zip \
   && unzip chromedriver_linux64.zip \
   && mv /chromedriver /usr/bin/; \
