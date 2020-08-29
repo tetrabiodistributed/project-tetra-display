@@ -1,22 +1,17 @@
-// Placeholder
-
 let socket = new WebSocket("ws://" + location.host + "/ws");
 
 socket.onopen = function (event) {
     console.log("websocket opened");
-    document.getElementById("conn_status").innerHTML = "connected";
     socket.send(JSON.stringify({"subscribe": ""}))
 };
 
 socket.onmessage = function (event) {
-    var ul = document.getElementById("content");
-    var li = document.createElement("li");
-    li.appendChild(document.createTextNode(event.data));
-    ul.appendChild(li);
+    let data = JSON.parse(event.data)
+    console.log(data);
+    drawDataToPage(data)
 }
 
 socket.onclose = function (event) {
-    document.getElementById("conn_status").innerHTML = "closed";
     if (event.wasClean) {
         console.log("connection closed");
     } else {
@@ -25,6 +20,27 @@ socket.onclose = function (event) {
 }
 
 socket.onerror = function (event) {
-    document.getElementById("conn_status").innerHTML = "error";
     console.log("error: " + event.message)
+}
+
+function drawDataToPage(data) {
+    classes_and_descriptors = {"Inspiratory Pressure": "dP",
+                               "PEEP": "PEEP",
+                               "PIP": "PIP",
+                               "Tidal Volume": "Tv"};
+    for (i = 0; i < 4; ++i) {
+        for (const [key, value] of Object.entries(data["patient-" + i])) {
+            var descriptorMagnitude = Number(value).toFixed(2);
+            dataElement = getElementByXpath("//div[@class='_dataCell patient-" + i + " " + classes_and_descriptors[key] + "']");
+            dataElement.innerHTML = descriptorMagnitude;
+        }
+    }
+}
+
+function getElementByXpath(path) {
+    return document.evaluate(path,
+                             document,
+                             null,
+                             XPathResult.FIRST_ORDERED_NODE_TYPE,
+                             null).singleNodeValue;
 }

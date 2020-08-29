@@ -22,6 +22,7 @@ def step_impl(context):
 @then("the sensors yield all of these descriptors")
 def step_impl(context):
     context.calculator.add_datum(context.sensor_data)
-    assert all(row["descriptor"] in context.calculator.get_datum()[patient]
+    assert all(row["descriptor"]
+               in context.calculator.get_datum()[f"patient-{patient_number}"]
                for row in context.table
-               for patient in range(constants.NUMBER_OF_PATIENTS))
+               for patient_number in range(constants.NUMBER_OF_PATIENTS))

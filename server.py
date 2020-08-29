@@ -29,7 +29,7 @@ class Calculator():
     def get_datum(self):
         datum = {}
         for i in range(len(self._calculators)):
-            datum.update({i: self._calculators[i].descriptors})
+            datum.update({f"patient-{i}": self._calculators[i].descriptors})
         return datum
 
 
@@ -52,10 +52,12 @@ def main():
     running = True
     while running:
         try:
+            start_time = time.time()
             calculator.add_datum(sensor_data)
 
             communicator.publish_message(calculator.get_datum())
-            time.sleep(1.0)
+            while (time.time() - start_time < 1.0):
+                time.sleep(0.1)
         except:
             running = False
             raise

@@ -9,5 +9,4 @@ Feature: Calculating tubing descriptors
             | Inspiratory Pressure |
             | Tidal Volume         |
             | PEEP                 |
-            | Peak Pressure        |
-            | Flow Rate            |
+            | PIP                  |

@@ -7,3 +7,6 @@ pytz
 docker
 adafruit_blinka
 crcmod
+supervisor
+selenium
+pyvirtualdisplay

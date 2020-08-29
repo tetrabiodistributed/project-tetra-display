@@ -86,49 +86,49 @@ div._dataCell::after {
     display: inline-block;
 }
 
-div._columnHeader-1 {
+div._columnHeader-0 {
     color: #ff5100;
     background-color: #ff510080;
     border: 1px solid #ff5100;
 }
 
-div._columnHeader-2 {
+div._columnHeader-1 {
     color: #ff6b00;
     background-color: #ff6b0080;
     border: 1px solid #ff6b00;
 }
 
-div._columnHeader-3 {
+div._columnHeader-2 {
     color: #ff9015;
     background-color: #ff901580;
     border: 1px solid #ff9015;
 }
 
-div._columnHeader-4 {
+div._columnHeader-3 {
     color: #d5783d;
     background-color: #ffb13880;
     border: 1px solid #d5783d;
 }
 
-div.patient-1 {
+div.patient-0 {
     color: #ff5100;
     background-color: #ff510033;
     border: 1px solid #ff5100;
 }
 
-div.patient-2 {
+div.patient-1 {
     color: #ff6b00;
     background-color: #ff6b0033;
     border: 1px solid #ff6b00;
 }
 
-div.patient-3 {
+div.patient-2 {
     color: #ff9015;
     background-color: #ff901533;
     border: 1px solid #ff9015;
 }
 
-div.patient-4 {
+div.patient-3 {
     color: #d5783d;
     background-color: #ffb13833;
     border: 1px solid #d5783d;

@@ -18,6 +18,6 @@ class TestServer(unittest.TestCase):
         data = sensors.poll()
         calculator = server.Calculator()
         calculator.add_datum(data)
-        self.assertIn("PEEP", calculator.get_datum()[0],
+        self.assertIn("PEEP", calculator.get_datum()["patient-0"],
                       "Fails to add data to and then get data from "
                       "the calculator.")

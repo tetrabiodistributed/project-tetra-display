@@ -1,10 +1,10 @@
 from behave import given, when, then
 import math
-import websocket
 import json
 import time
 
 import constants
+from basic_websocket import ws_connect_retry
 
 
 @given("A running Docker image on port {port}")
@@ -18,38 +18,31 @@ def step_impl(context, port):
     time.sleep(1.2)  # give the container a moment to start up
 
 
-def ws_connect_retry(uri):
-    for i in range(10):
-        try:
-            ws = websocket.create_connection(uri)
-            return ws
-        except Exception as e:
-            if not isinstance(e, KeyboardInterrupt):
-                time.sleep(.1)
-            else:
-                raise
-    raise Exception("Could not do the thing")
+@when("I listen for packets")
+def step_impl(context):
+    uri = f"ws://localhost:{context.port}/ws"
+    context.ws = ws_connect_retry(uri)
 
 
 @then("there will be a JSON packet sent every {t:f} seconds")
 def step_impl(context, t):
     number_of_messages = 5
-    uri = f"ws://localhost:{context.port}/ws"
     start_time = time.time()
-    ws = ws_connect_retry(uri)
     for _ in range(number_of_messages):
-        context.message = ws.recv()
+        context.message = context.ws.recv()
     end_time = time.time()
     context.json = json.loads(context.message)
+    context.client.containers.get(context.container_name).kill()
     assert math.isclose((end_time - start_time)/number_of_messages, t,
                         rel_tol=0.15), \
         "Fails to send packets at 1 Hz"
 
 
-@then("that JSON packet will have several keys named with integers")
+@then("that JSON packet will have several keys named with "
+      "'patient-{0-index}'")
 def step_impl(context):
     for i in range(constants.NUMBER_OF_PATIENTS):
-        assert f"{i}" in context.json, \
+        assert f"patient-{i}" in context.json, \
             ("JSON packet doesn't have top-level keys formatted as "
              "expected.")
 
@@ -58,5 +51,5 @@ def step_impl(context):
 def step_impl(context):
     for i in range(constants.NUMBER_OF_PATIENTS):
         for row in context.table:
-            assert row["descriptor"] in context.json[f"{i}"], \
+            assert row["descriptor"] in context.json[f"patient-{i}"], \
                 "Patient descriptors aren't formatted as expected."
