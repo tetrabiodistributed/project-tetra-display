@@ -19,22 +19,20 @@ def step_impl(context):
     context.browser.get(f"file://{os.getcwd()}/static/index.html")
 
 
-@when("I send a JSON packet where the top-level keys are '0'-number of "
-      "patients and their values are this dictionary")
+@when("a data packet is sent where all the leaf values are 0")
 def step_impl(context):
-    context.expected_values = {f"patient-{i}": {row["key"]: row["value"]
-                                                for row in context.table}
-                               for i in range(constants.NUMBER_OF_PATIENTS)}
+    context.expected_values = {
+        f"patient-{i}": {descriptor: 0.0
+                         for descriptor in constants.DESCRIPTORS}
+        for i in range(constants.NUMBER_OF_PATIENTS)}
     context.browser \
            .execute_script(f"drawDataToPage({context.expected_values})")
 
 
-@then("all the values in the display will correspond to that JSON packet")
+@then("all the values in the display will correspond to that data packet")
 def step_impl(context):
-    classes_and_descriptors = {"dP": "Inspiratory Pressure",
-                               "PEEP": "PEEP",
-                               "PIP": "PIP",
-                               "Tv": "Tidal Volume"}
+    classes_and_descriptors = dict(zip(constants.DESCRIPTORS_HTML,
+                                       constants.DESCRIPTORS))
     for i in range(constants.NUMBER_OF_PATIENTS):
         for class_label, descriptor in classes_and_descriptors.items():
             context.element = (
@@ -54,10 +52,10 @@ def step_impl(context):
       "values are all {value:f} except {diff_descriptor} for patient "
       "{patient_number:d} which is {special_value:f}")
 def step_impl(context, value, diff_descriptor, patient_number, special_value):
-    descriptors = ("Inspiratory Pressure", "PEEP", "PIP", "Tidal Volume")
-    context.expected_values = {f"patient-{i}": {descriptor: value
-                                                for descriptor in descriptors}
-                               for i in range(constants.NUMBER_OF_PATIENTS)}
+    context.expected_values = {
+        f"patient-{i}": {descriptor: value
+                         for descriptor in constants.DESCRIPTORS}
+        for i in range(constants.NUMBER_OF_PATIENTS)}
     context.expected_values[f"patient-{patient_number}"][diff_descriptor] = (
         special_value)
     context.browser \
