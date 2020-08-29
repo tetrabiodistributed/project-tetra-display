@@ -1,3 +1,4 @@
+@wip
 Feature: Runs backend from a Docker image
 
 @slow
@@ -6,9 +7,4 @@ Scenario:
     When I listen for packets
     Then there will be a JSON packet sent every 1.0 seconds
     And that JSON packet will have several keys named with 'patient-{0-index}'
-    And those keys will refer to a dictionary of these descriptors
-        | descriptor           |
-        | Inspiratory Pressure |
-        | Tidal Volume         |
-        | PEEP                 |
-        | PIP                  |
+    And those keys will refer to the descriptors
