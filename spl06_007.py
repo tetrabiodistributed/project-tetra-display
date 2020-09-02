@@ -209,16 +209,12 @@ class Calibrator():
         scaled_temperature = (raw_temperature
                               / self._temperature_scaling_factor)
 
-        compensated_pressure = (
-            self._c00
-            + scaled_pressure*(self._c10
-                               + scaled_pressure*(self._c20
-                                                  + scaled_pressure*self._c30)
-                               )
-            + scaled_temperature*self._c01
-            + scaled_temperature*scaled_pressure*(self._c11
-                                                  + scaled_pressure*self._c21)
-        )
+        compensated_pressure0 = self._c10 + (scaled_pressure * (self._c20 + scaled_pressure * self._c30))
+        print('compensated_pressure0 = ',compensated_pressure0)
+        compensated_pressure1 = scaled_temperature * scaled_pressure * (self._c11 + scaled_pressure * self._c21)
+        print('compensated_pressure1 = ',compensated_pressure1)
+        compensated_pressure = self._c00 + scaled_pressure * compensated_pressure0 + scaled_temperature * self._c01 + compensated_pressure1;
+        print('pressure_compensated = ', compensated_pressure)
         return compensated_pressure
 
     def temperature(self, raw_temperature):
@@ -234,6 +230,7 @@ class Calibrator():
         compensated_temperature = (
             self._c0 * 0.5 + self._c1 * scaled_temperature
         )
+        print('t_comp = ', compensated_temperature)
         return compensated_temperature
 
 
@@ -411,15 +408,20 @@ class Communicator():
 
         pressure_msb = self._i2c.read_register(
             SensorConstants.PRS_B2)
+        print('sensor[0] = ', pressure_msb)
         pressure_lsb = self._i2c.read_register(
             SensorConstants.PRS_B1)
+        print('sensor[1] = ', pressure_lsb)
         pressure_xlsb = self._i2c.read_register(
             SensorConstants.PRS_B0)
+        print('sensor[2] = ', pressure_xlsb)
 
-        pressure = self._twos_complement(((pressure_msb << 16)
-                                          + (pressure_lsb << 8)
-                                          + pressure_xlsb),
-                                         24)
+        press_raw0 = (pressure_msb << 16) | (pressure_lsb << 8) | pressure_xlsb
+        print('press_raw0 = ', press_raw0)
+        press_raw1 = -16777216 if(sensor_read[0] & 0x80) else 0
+        print('press_raw1 = ', pressure)
+        pressure = press_raw0 | press_raw1
+        print('press_raw = ', pressure)
         return pressure
 
     @property
@@ -491,14 +493,16 @@ class Communicator():
 
         temperature_msb = self._i2c.read_register(
             SensorConstants.TMP_B2)
+        print('sensor[3] = ', temperature_msb)
         temperature_lsb = self._i2c.read_register(
             SensorConstants.TMP_B1)
+        print('sensor[4] = ', temperature_lsb)
         temperature_xlsb = self._i2c.read_register(
             SensorConstants.TMP_B0)
-        temperature = self._twos_complement(((temperature_msb << 16)
-                                             + (temperature_lsb << 8)
-                                             + temperature_xlsb),
-                                            24)
+        print('sensor[5] = ', temperature_xlsb)
+        temperature = (temperature_msb << 16) | (temperature_lsb << 8) | temperature_xlsb
+        print('tempRaw = ', temperature)
+
         return temperature
 
     @property
@@ -518,61 +522,64 @@ class Communicator():
 
         Note: The coefficients read from the coefficient register
         {c0, c1} 12 bit 2´s complement numbers.
+
+        ported from C+ from https://github.com/DimianZhan/spl06/blob/master/spl06.c
         """
         def coefficients_ready():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.COEF_RDY != 0)
         self._wait_for_condition_else_timeout(coefficients_ready, 4)
 
-        _c0_11_4 = self._i2c.read_register(SensorConstants.C0_11_4)
-        _c0_3_0_c1_11_8 = (
-            self._i2c.read_register(SensorConstants.C0_3_0_C1_11_8))
-        _c1_7_0 = self._i2c.read_register(SensorConstants.C1_7_0)
-        _c00_19_12 = self._i2c.read_register(SensorConstants.C00_19_12)
-        _c00_11_4 = self._i2c.read_register(SensorConstants.C00_11_4)
-        _c00_3_0_c10_19_16 = (
+        c[0] = self._i2c.read_register(SensorConstants.C0_11_4) #0
+        c[1] = (self._i2c.read_register(SensorConstants.C0_3_0_C1_11_8))
+        c[2] = self._i2c.read_register(SensorConstants.C1_7_0)
+        c[3] = self._i2c.read_register(SensorConstants.C00_19_12)
+        c[4] = self._i2c.read_register(SensorConstants.C00_11_4)
+        c[5] = (
             self._i2c.read_register(SensorConstants.C00_3_0_C10_19_16))
-        _c10_15_8 = self._i2c.read_register(SensorConstants.C10_15_8)
-        _c10_7_0 = self._i2c.read_register(SensorConstants.C10_7_0)
-        _c01_15_8 = self._i2c.read_register(SensorConstants.C01_15_8)
-        _c01_7_0 = self._i2c.read_register(SensorConstants.C01_7_0)
-        _c11_15_8 = self._i2c.read_register(SensorConstants.C11_15_8)
-        _c11_7_0 = self._i2c.read_register(SensorConstants.C11_7_0)
-        _c20_15_8 = self._i2c.read_register(SensorConstants.C20_15_8)
-        _c20_7_0 = self._i2c.read_register(SensorConstants.C20_7_0)
-        _c21_15_8 = self._i2c.read_register(SensorConstants.C21_15_8)
-        _c21_7_0 = self._i2c.read_register(SensorConstants.C21_7_0)
-        _c30_15_8 = self._i2c.read_register(SensorConstants.C30_15_8)
-        _c30_7_0 = self._i2c.read_register(SensorConstants.C30_7_0)
+        c[6] = self._i2c.read_register(SensorConstants.C10_15_8)
+        c[7] = self._i2c.read_register(SensorConstants.C10_7_0)
+        c[8] = self._i2c.read_register(SensorConstants.C01_15_8)
+        c[9] = self._i2c.read_register(SensorConstants.C01_7_0)
+        c[10] = self._i2c.read_register(SensorConstants.C11_15_8)
+        c[11] = self._i2c.read_register(SensorConstants.C11_7_0)
+        c[12] = self._i2c.read_register(SensorConstants.C20_15_8)
+        c[13] = self._i2c.read_register(SensorConstants.C20_7_0)
+        c[14] = self._i2c.read_register(SensorConstants.C21_15_8)
+        c[15] = self._i2c.read_register(SensorConstants.C21_7_0)
+        c[16] = self._i2c.read_register(SensorConstants.C30_15_8)
+        c[17] = self._i2c.read_register(SensorConstants.C30_7_0)
+        print('c = ',' '.join(map(str, c)))
 
         def most_significant_nibble(byte): return (byte & 0xf0) >> 4
 
         def least_significant_nibble(byte): return byte & 0x0f
 
-        c0 = self._twos_complement(
-            (_c0_11_4 << 4) | most_significant_nibble(_c0_3_0_c1_11_8),
-            12
-        )
-        c1 = self._twos_complement(
-            (least_significant_nibble(_c0_3_0_c1_11_8) << 8) | _c1_7_0,
-            12
-        )
+        c0 = c[0] << 4 | c[1] >> 4; #working... returns 200
 
-        c00 = self._twos_complement(
-            (_c00_19_12 << 12) | (_c00_11_4 << 4)
-            | most_significant_nibble(_c00_3_0_c10_19_16),
-            16
-        )
-        c10 = self._twos_complement(
-            (least_significant_nibble(_c00_3_0_c10_19_16) << 16)
-            | (_c10_15_8 << 8) | _c10_7_0,
-            16
-        )
-        c01 = self._twos_complement((_c01_15_8 << 8) | _c01_7_0, 16)
-        c11 = self._twos_complement((_c11_15_8 << 8) | _c11_7_0, 16)
-        c20 = self._twos_complement((_c20_15_8 << 8) | _c20_7_0, 16)
-        c21 = self._twos_complement((_c21_15_8 << 8) | _c21_7_0, 16)
-        c30 = self._twos_complement((_c30_15_8 << 8) | _c30_7_0, 16)
+        c1 = (c[1] & 0x0f) << 8 | c[2]
+        c1 = (-4096 | c1) if c1 & 1 << 11 else c1
+        print('c1=',c1)
+
+        c00 = c[3] << 12 | c[4] << 4 | c[5] >> 4;
+        #c00 = (0xfff00000 | c00) if (c00 & 1 << 19) else c00;
+        print('c00= ',c00)
+
+        c10 = ((c[5] & 0x0F) << 16) | (c[6] << 8) | c[7];
+        c10_temp = -1048576 if(c[5] & 0x8) else 0
+        c10 = c10 | c10_temp
+        print('c10=', c10)
+
+        c01 = c[8] << 8 | c[9];
+        c11 = c[10] << 8 | c[11];
+        c20 = c[12] << 8 | c[13];
+        c21 = c[14] << 8 | c[15];
+        c30 = c[16] << 8 | c[17];
+        print('c01=',c01)
+        print('c11=', c11)
+        print('c20=', c20)
+        print('c21=', c21)
+        print('c30=', c30)
 
         self._calibration_coefficients = (c0, c1,
                                           c00, c10, c01, c11, c20, c21, c30)
