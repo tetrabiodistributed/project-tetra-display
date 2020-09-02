@@ -418,7 +418,7 @@ class Communicator():
 
         press_raw0 = (pressure_msb << 16) | (pressure_lsb << 8) | pressure_xlsb
         print('press_raw0 = ', press_raw0)
-        press_raw1 = -16777216 if(sensor_read[0] & 0x80) else 0
+        press_raw1 = -16777216 if(pressure_msb & 0x80) else 0
         print('press_raw1 = ', pressure)
         pressure = press_raw0 | press_raw1
         print('press_raw = ', pressure)
