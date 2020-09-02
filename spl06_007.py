@@ -529,7 +529,7 @@ class Communicator():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.COEF_RDY != 0)
         self._wait_for_condition_else_timeout(coefficients_ready, 4)
-        c = []
+        c = [None] * 18
         c[0] = self._i2c.read_register(SensorConstants.C0_11_4) #0
         c[1] = (self._i2c.read_register(SensorConstants.C0_3_0_C1_11_8))
         c[2] = self._i2c.read_register(SensorConstants.C1_7_0)
