@@ -122,7 +122,7 @@ class TestPressureSensor(unittest.TestCase):
         self.assertTrue(math.isclose(measured_pressure, standard_pressure,
                                      rel_tol=0.10),
                         f"{measured_pressure} != "
-                        "101.25 +/- 10% Pa :\n"
+                        "101325 +/- 10% Pa :\n"
                         "Fails to return ambient pressure in Pa.\n"
                         "Note that if this test is performed in a "
                         "very low pressure environment,\nthe ambient "
