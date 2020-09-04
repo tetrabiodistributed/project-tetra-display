@@ -165,7 +165,8 @@ else:
 
         def __init__(self, dump_communication=False):
             self._fake_data = (
-                ProcessSampleData("TestData/20200609T2358Z_patrickData.txt"))
+                ProcessSampleData("Tests/TestData/"
+                                  "20200609T2358Z_patrickData.txt"))
             self._data_index = 0
 
         def close(self):
