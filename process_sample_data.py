@@ -36,7 +36,6 @@ class ProcessSampleData():
 
         return self._timestamps
 
-    @property
     def relative_timestamps(self):
         """Gives the list of timestamps data were taken at in
         milliseconds since the first data point
