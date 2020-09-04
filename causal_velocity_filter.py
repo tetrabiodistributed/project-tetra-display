@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import signal
-from numpy_ringbuffer import RingBuffer
+from ringbuffer import RingBuffer
 
 
 class CausalVelocityFilter():
@@ -50,12 +50,12 @@ class CausalVelocityFilter():
         elif len(self._data_buffer) == 1:
             return self._data_buffer[-1]
         else:
-            return np.mean(
-                np.array(
-                    [((self._data_buffer[i] - self._data_buffer[i-1])
-                      / self._sampling_period)
-                     for i in range(1, len(self._data_buffer))]
-                ))
+            derivatives = [(self._data_buffer[i] - self._data_buffer[i-1])
+                           / self._sampling_period
+                           for i in range(-min(5,
+                                               len(self._data_buffer)-1),
+                                          0)]
+            return np.mean(derivatives)
 
     def append(self, datum):
         """Add a measurement and an elapsed time to the filter's

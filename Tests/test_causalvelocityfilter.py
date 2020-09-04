@@ -1,7 +1,7 @@
 import math
-import numpy as np
 import unittest
-import matplotlib.pyplot as plt
+
+import numpy as np
 
 from causal_velocity_filter import CausalVelocityFilter
 
@@ -28,7 +28,6 @@ class TestCausalVelocityFilter(unittest.TestCase):
             error = np.append(
                 error, desired_filtered_data[i] - filtered_data[i])
         rms_error = np.sqrt(np.mean(error[7:]**2))
-        print(rms_error)
         self.assertLess(rms_error, 0.01,
                         "Fails to differentiate a data series "
                         "approximating sin(x) within <0.01 rms error")
@@ -48,8 +47,6 @@ class TestCausalVelocityFilter(unittest.TestCase):
             error = np.append(
                 error, desired_filtered_data[i] - filtered_data[i])
         rms_error = np.sqrt(np.mean(error[7:]**2))
-        plt.plot(t, desired_filtered_data, t, filtered_data)
-        plt.show()
         self.assertLess(rms_error, 0.01,
                         "Fails to differentiate a data series while "
                         "rejecting high-frequency noise within "
