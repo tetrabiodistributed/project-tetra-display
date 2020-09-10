@@ -42,6 +42,20 @@ class TestPEEP(unittest.TestCase):
                         "sine where the range is clipped to the reals "
                         "greater than 0.")
 
+    def test_sin_step_in_amplitude(self):
+        def to_filter_data(t):
+            return np.sin(t) if t < 5 else 0.5*np.sin(t)
+
+        def desired_filter_data(t):
+            return -1 if t < 5 else -0.5
+        rms_error = filter_rms_error(PEEP,
+                                     to_filter_data,
+                                     desired_filter_data)
+        self.assertLess(rms_error, 0.01,
+                        "Fails to correctly calculate PEEP when there "
+                        "is a step in amplitude in the breathing "
+                        "waveform.")
+
     def test_approximate_breathing_data(self):
         def to_filter_data(t):
             if (t % (3*20*math.pi/3/10)) < (20*math.pi/3/10):
@@ -105,6 +119,20 @@ class TestPIP(unittest.TestCase):
                         "Fails to correctly calculate the PIP of a "
                         "sine where the range is clipped to the reals "
                         "greater than 0.")
+
+    def test_sin_step_in_amplitude(self):
+        def to_filter_data(t):
+            return np.sin(t) if t < 5 else 0.5*np.sin(t)
+
+        def desired_filter_data(t):
+            return 1 if t < 5 else 0.5
+        rms_error = filter_rms_error(PIP,
+                                     to_filter_data,
+                                     desired_filter_data)
+        self.assertLess(rms_error, 0.01,
+                        "Fails to correctly calculate PIP when there "
+                        "is a step in amplitude in the breathing "
+                        "waveform.")
 
     def test_approximate_breathing_data(self):
         def to_filter_data(t):
