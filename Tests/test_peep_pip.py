@@ -62,21 +62,12 @@ class TestPEEP(unittest.TestCase):
                         "of similar to actual breathing data.")
 
     def test_actual_breathing_data(self):
-        actual_data = actual_breathing_data()
-
-        t = np.array([datum[0] for datum in actual_data])
-        test_filter = PEEP(0.047)
-        to_filter_data = np.array([datum[1] for datum in actual_data])
-        filtered_data = np.array([])
-        desired_filtered_data = desired_filter_data_lambda(t)
-        error = np.array([])
-        for i in range(len(to_filter_data)):
-            test_filter.append(to_filter_data[i])
-            filtered_data = np.append(filtered_data,
-                                      test_filter.get_datum())
-            error = np.append(error,
-                              desired_filtered_data[i] - filtered_data[i])
-        rms_error = np.sqrt(np.mean(error**2))
+        rms_error = filter_rms_error(PEEP,
+                                     actual_breathing_data,
+                                     actual_PEEP_data,
+                                     dt=actual_data_dt,
+                                     start_time=actual_data_start_time,
+                                     end_time=actual_data_end_time)
         self.assertLess(rms_error, 0.01,
                         "Fails to correctly calculate PEEP for actual "
                         "data.")
@@ -85,6 +76,9 @@ class TestPEEP(unittest.TestCase):
 breathing_data = None
 pip_data = None
 peep_data = None
+actual_data_start_time = 0.0
+actual_data_dt = 0.047
+actual_data_end_time = 11.504
 
 
 def get_breathing_data():
