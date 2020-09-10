@@ -73,6 +73,70 @@ class TestPEEP(unittest.TestCase):
                         "data.")
 
 
+class TestPIP(unittest.TestCase):
+
+    def test_sin_input(self):
+        def desired_filter_data(t): return np.ones(len(t))
+        rms_error = filter_rms_error(PIP,
+                                     np.sin,
+                                     desired_filter_data)
+        self.assertLess(rms_error, 0.01,
+                        "Fails to correctly calculate the PIP of a "
+                        "sine.")
+
+    def test_cos_input(self):
+        def desired_filter_data(t): return np.ones(len(t))
+        rms_error = filter_rms_error(PIP,
+                                     np.cos,
+                                     desired_filter_data)
+        self.assertLess(rms_error, 0.01,
+                        "Fails to correctly calculate the PIP of a "
+                        "cosine.")
+
+    def test_sin_greater_than_zero(self):
+        def to_filter_data(t):
+            return np.array([max(0, datum) for datum in np.sin(t)])
+
+        def desired_filter_data(t): return np.ones(len(t))
+        rms_error = filter_rms_error(PIP,
+                                     to_filter_data,
+                                     desired_filter_data)
+        self.assertLess(rms_error, 0.01,
+                        "Fails to correctly calculate the PIP of a "
+                        "sine where the range is clipped to the reals "
+                        "greater than 0.")
+
+    def test_approximate_breathing_data(self):
+        def to_filter_data(t):
+            if (t % (3*20*math.pi/3/10)) < (20*math.pi/3/10):
+                # finds every 4th peak of sin(3t)
+                breathing_active = True
+            else:
+                breathing_active = False
+            return (max(20*np.sin(3*t), 0) * 1 if breathing_active else 0) + 4
+
+        def desired_filter_data(t): return 20*np.ones(len(t))
+        rms_error = filter_rms_error(PIP,
+                                     to_filter_data,
+                                     desired_filter_data,
+                                     dt=0.125,
+                                     end_time=20*math.pi/3)
+        self.assertLess(rms_error, 0.01,
+                        "Fails to calculate PIP for data that is sort "
+                        "of similar to actual breathing data.")
+
+    def test_actual_breathing_data(self):
+        rms_error = filter_rms_error(PIP,
+                                     actual_breathing_data,
+                                     actual_PIP_data,
+                                     dt=actual_data_dt,
+                                     start_time=actual_data_start_time,
+                                     end_time=actual_data_end_time)
+        self.assertLess(rms_error, 0.01,
+                        "Fails to correctly calculate PIP for actual "
+                        "data.")
+
+
 breathing_data = None
 pip_data = None
 peep_data = None
