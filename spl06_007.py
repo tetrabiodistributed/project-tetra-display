@@ -321,7 +321,7 @@ class Communicator():
             set_standby = True
         if set_standby:
             self._i2c.write_register(
-                SensorConstants.MEAS_CFG, SensorConstants.STANDBY)
+                SensorConstants.MEAS_CFG, SensorConstants.BACKGROUND_PRESSURE_TEMPERATURE)
             self._op_mode = PressureSensor.OpMode.standby
             return PressureSensor.OpMode.standby
 
@@ -398,7 +398,7 @@ class Communicator():
         if self._op_mode == PressureSensor.OpMode.command:
             self._i2c.write_register(
                 SensorConstants.MEAS_CFG,
-                SensorConstants.COMMAND_PRESSURE
+                SensorConstants.BACKGROUND_PRESSURE_TEMPERATURE
             )
 
         def pressure_ready():
@@ -484,7 +484,8 @@ class Communicator():
         """
         if self._op_mode == PressureSensor.OpMode.command:
             self._i2c.write_register(SensorConstants.MEAS_CFG,
-                                     SensorConstants.COMMAND_TEMPERATURE)
+                                     SensorConstants.BACKGROUND_PRESSURE_TEMPERATURE)
+
 
         def temperature_ready():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
