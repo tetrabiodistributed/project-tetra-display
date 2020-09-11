@@ -12,7 +12,7 @@ from process_sample_data import ProcessSampleData
 class TestPEEP(unittest.TestCase):
 
     def test_sin_input(self):
-        def desired_filter_data(t): return -np.ones(len(t))
+        def desired_filter_data(t): return -np.ones_like(t)
         rms_error = filter_rms_error(PEEP,
                                      np.sin,
                                      desired_filter_data)
@@ -21,7 +21,7 @@ class TestPEEP(unittest.TestCase):
                         "sine.")
 
     def test_cos_input(self):
-        def desired_filter_data(t): return -np.ones(len(t))
+        def desired_filter_data(t): return -np.ones_like(t)
         rms_error = filter_rms_error(PEEP,
                                      np.cos,
                                      desired_filter_data)
@@ -31,9 +31,9 @@ class TestPEEP(unittest.TestCase):
 
     def test_sin_greater_than_zero(self):
         def to_filter_data(t):
-            return np.array([max(0, datum) for datum in np.sin(t)])
+            return np.maximum(np.sin(t), 0)
 
-        def desired_filter_data(t): return np.zeros(len(t))
+        def desired_filter_data(t): return np.zeros_like(t)
         rms_error = filter_rms_error(PEEP,
                                      to_filter_data,
                                      desired_filter_data)
@@ -44,10 +44,10 @@ class TestPEEP(unittest.TestCase):
 
     def test_sin_step_in_amplitude(self):
         def to_filter_data(t):
-            return np.sin(t) if t < 2*math.pi else 0.5*np.sin(t)
+            return np.where(t < 2*np.pi, np.sin(t), 0.5*np.sin(t))
 
         def desired_filter_data(t):
-            return -1 if t < 2*math.pi else -0.5
+            return np.where(t < 2*np.pi, -1, -0.5)
         rms_error = filter_rms_error(PEEP,
                                      to_filter_data,
                                      desired_filter_data,
@@ -59,14 +59,12 @@ class TestPEEP(unittest.TestCase):
 
     def test_approximate_breathing_data(self):
         def to_filter_data(t):
-            if (t % (3*20*math.pi/3/10)) < (20*math.pi/3/10):
-                # finds every 4th peak of sin(3t)
-                breathing_active = True
-            else:
-                breathing_active = False
-            return (max(20*np.sin(3*t), 0) * 1 if breathing_active else 0) + 4
+            # every 4th peak of max(20*sin(3t), 0)
+            return np.where((t % (3*20*np.pi/3/10)) < (20*np.pi/3/10),
+                            np.maximum(20*np.sin(3*t), 0) + 4,
+                            4)
 
-        def desired_filter_data(t): return np.zeros(len(t))
+        def desired_filter_data(t): return np.zeros_like(t)
         rms_error = filter_rms_error(PEEP,
                                      to_filter_data,
                                      desired_filter_data,
@@ -91,7 +89,7 @@ class TestPEEP(unittest.TestCase):
 class TestPIP(unittest.TestCase):
 
     def test_sin_input(self):
-        def desired_filter_data(t): return np.ones(len(t))
+        def desired_filter_data(t): return np.ones_like(t)
         rms_error = filter_rms_error(PIP,
                                      np.sin,
                                      desired_filter_data)
@@ -100,7 +98,7 @@ class TestPIP(unittest.TestCase):
                         "sine.")
 
     def test_cos_input(self):
-        def desired_filter_data(t): return np.ones(len(t))
+        def desired_filter_data(t): return np.ones_like(t)
         rms_error = filter_rms_error(PIP,
                                      np.cos,
                                      desired_filter_data)
@@ -110,9 +108,9 @@ class TestPIP(unittest.TestCase):
 
     def test_sin_greater_than_zero(self):
         def to_filter_data(t):
-            return np.array([max(0, datum) for datum in np.sin(t)])
+            return np.maximum(np.sin(t), 0)
 
-        def desired_filter_data(t): return np.ones(len(t))
+        def desired_filter_data(t): return np.ones_like(t)
         rms_error = filter_rms_error(PIP,
                                      to_filter_data,
                                      desired_filter_data)
@@ -123,10 +121,10 @@ class TestPIP(unittest.TestCase):
 
     def test_sin_step_in_amplitude(self):
         def to_filter_data(t):
-            return np.sin(t) if t < 2*math.pi else 0.5*np.sin(t)
+            return np.where(t < 2*np.pi, np.sin(t), 0.5*np.sin(t))
 
         def desired_filter_data(t):
-            return 1 if t < 2*math.pi else 0.5
+            return np.where(t < 2*np.pi, 1, 0.5)
         rms_error = filter_rms_error(PIP,
                                      to_filter_data,
                                      desired_filter_data,
@@ -138,14 +136,11 @@ class TestPIP(unittest.TestCase):
 
     def test_approximate_breathing_data(self):
         def to_filter_data(t):
-            if (t % (3*20*math.pi/3/10)) < (20*math.pi/3/10):
-                # finds every 4th peak of sin(3t)
-                breathing_active = True
-            else:
-                breathing_active = False
-            return (max(20*np.sin(3*t), 0) * 1 if breathing_active else 0) + 4
+            return np.where((t % (3*20*math.pi/3/10)) < (20*math.pi/3/10),
+                            np.maximum(20*np.sin(3*t), 0) + 4,
+                            4)
 
-        def desired_filter_data(t): return 20*np.ones(len(t))
+        def desired_filter_data(t): return 20*np.ones_like(t)
         rms_error = filter_rms_error(PIP,
                                      to_filter_data,
                                      desired_filter_data,
@@ -188,8 +183,9 @@ def get_breathing_data():
             if (timestamps[i] - timestamps[i-1] > 1):
                 nonrepeat_timestamp_indices.append(i)
         breathing_data = interp1d(
-            (timestamps[i]/1000 for i in nonrepeat_timestamp_indices),
-            (pressures[i] for i in nonrepeat_timestamp_indices))
+            [timestamps[i]/1000 for i in nonrepeat_timestamp_indices],
+            [pressures[i] for i in nonrepeat_timestamp_indices],
+            fill_value="extrapolate")
 
     return breathing_data
 
@@ -203,7 +199,10 @@ def get_PIP_data():
                     (9.06, 7.74), (11.504, 7.74)]
         timestamps = raw_data[:][0]
         pressures = raw_data[:][1]
-        breathing_data = interp1d(timestamps, pressures)
+        pip_data = interp1d(timestamps, pressures,
+                            fill_value="extrapolate")
+
+    return pip_data
 
 
 def get_PEEP_data():
@@ -215,7 +214,10 @@ def get_PEEP_data():
                     (6.7, 24.2), (6.81, 24.3), (11.504, 24.3)]
         timestamps = raw_data[:][0]
         pressures = raw_data[:][1]
-        breathing_data = interp1d(timestamps, pressures)
+        peep_data = interp1d(timestamps, pressures,
+                             fill_value="extrapolate")
+
+    return peep_data
 
 
 def actual_breathing_data(t):
