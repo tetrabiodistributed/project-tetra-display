@@ -44,13 +44,14 @@ class TestPEEP(unittest.TestCase):
 
     def test_sin_step_in_amplitude(self):
         def to_filter_data(t):
-            return np.sin(t) if t < math.pi else 0.5*np.sin(t)
+            return np.sin(t) if t < 2*math.pi else 0.5*np.sin(t)
 
         def desired_filter_data(t):
-            return -1 if t < math.pi else -0.5
+            return -1 if t < 2*math.pi else -0.5
         rms_error = filter_rms_error(PEEP,
                                      to_filter_data,
-                                     desired_filter_data)
+                                     desired_filter_data,
+                                     end_time=4*math.pi)
         self.assertLess(rms_error, 0.01,
                         "Fails to correctly calculate PEEP when there "
                         "is a step in amplitude in the breathing "
@@ -122,13 +123,14 @@ class TestPIP(unittest.TestCase):
 
     def test_sin_step_in_amplitude(self):
         def to_filter_data(t):
-            return np.sin(t) if t < math.pi else 0.5*np.sin(t)
+            return np.sin(t) if t < 2*math.pi else 0.5*np.sin(t)
 
         def desired_filter_data(t):
-            return 1 if t < math.pi else 0.5
+            return 1 if t < 2*math.pi else 0.5
         rms_error = filter_rms_error(PIP,
                                      to_filter_data,
-                                     desired_filter_data)
+                                     desired_filter_data,
+                                     end_time=4*math.pi)
         self.assertLess(rms_error, 0.01,
                         "Fails to correctly calculate PIP when there "
                         "is a step in amplitude in the breathing "
