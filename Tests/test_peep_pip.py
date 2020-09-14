@@ -9,23 +9,29 @@ from filter_rms_error import filter_rms_error
 from process_sample_data import ProcessSampleData
 
 
+safety_factor = 2
+
+
 class TestPEEP(unittest.TestCase):
 
     def test_sin_input(self):
-        def desired_filter_data(t): return -np.ones_like(t)
-        rms_error = filter_rms_error(PEEP,
-                                     np.sin,
-                                     desired_filter_data)
-        self.assertLess(rms_error, 0.01,
+        def desired_filter_data(t):
+            return np.full_like(t, -1)
+        normalized_error = filter_rms_error(PEEP,
+                                            np.sin,
+                                            desired_filter_data,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to correctly calculate the PEEP of a "
                         "sine.")
 
     def test_cos_input(self):
-        def desired_filter_data(t): return -np.ones_like(t)
-        rms_error = filter_rms_error(PEEP,
-                                     np.cos,
-                                     desired_filter_data)
-        self.assertLess(rms_error, 0.01,
+        def desired_filter_data(t): return np.full_like(t, -1)
+        normalized_error = filter_rms_error(PEEP,
+                                            np.cos,
+                                            desired_filter_data,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to correctly calculate the PEEP of a "
                         "cosine.")
 
@@ -34,10 +40,11 @@ class TestPEEP(unittest.TestCase):
             return np.maximum(np.sin(t), 0)
 
         def desired_filter_data(t): return np.zeros_like(t)
-        rms_error = filter_rms_error(PEEP,
-                                     to_filter_data,
-                                     desired_filter_data)
-        self.assertLess(rms_error, 0.01,
+        normalized_error = filter_rms_error(PEEP,
+                                            to_filter_data,
+                                            desired_filter_data,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to correctly calculate the PEEP of a "
                         "sine where the range is clipped to the reals "
                         "greater than 0.")
@@ -48,11 +55,12 @@ class TestPEEP(unittest.TestCase):
 
         def desired_filter_data(t):
             return np.where(t < 2*np.pi, -1, -0.5)
-        rms_error = filter_rms_error(PEEP,
-                                     to_filter_data,
-                                     desired_filter_data,
-                                     end_time=4*math.pi)
-        self.assertLess(rms_error, 0.01,
+        normalized_error = filter_rms_error(PEEP,
+                                            to_filter_data,
+                                            desired_filter_data,
+                                            end_time=4*math.pi,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to correctly calculate PEEP when there "
                         "is a step in amplitude in the breathing "
                         "waveform.")
@@ -65,23 +73,25 @@ class TestPEEP(unittest.TestCase):
                             4)
 
         def desired_filter_data(t): return np.zeros_like(t)
-        rms_error = filter_rms_error(PEEP,
-                                     to_filter_data,
-                                     desired_filter_data,
-                                     dt=0.125,
-                                     end_time=20*math.pi/3)
-        self.assertLess(rms_error, 0.01,
+        normalized_error = filter_rms_error(PEEP,
+                                            to_filter_data,
+                                            desired_filter_data,
+                                            dt=0.125,
+                                            end_time=20*math.pi/3,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to calculate PEEP for data that is sort "
                         "of similar to actual breathing data.")
 
     def test_actual_breathing_data(self):
-        rms_error = filter_rms_error(PEEP,
-                                     actual_breathing_data,
-                                     actual_PEEP_data,
-                                     dt=actual_data_dt,
-                                     start_time=actual_data_start_time,
-                                     end_time=actual_data_end_time)
-        self.assertLess(rms_error, 0.01,
+        normalized_error = filter_rms_error(PEEP,
+                                            actual_breathing_data,
+                                            actual_PEEP_data,
+                                            dt=actual_data_dt,
+                                            start_time=actual_data_start_time,
+                                            end_time=actual_data_end_time,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to correctly calculate PEEP for actual "
                         "data.")
 
@@ -90,19 +100,21 @@ class TestPIP(unittest.TestCase):
 
     def test_sin_input(self):
         def desired_filter_data(t): return np.ones_like(t)
-        rms_error = filter_rms_error(PIP,
-                                     np.sin,
-                                     desired_filter_data)
-        self.assertLess(rms_error, 0.01,
+        normalized_error = filter_rms_error(PIP,
+                                            np.sin,
+                                            desired_filter_data,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to correctly calculate the PIP of a "
                         "sine.")
 
     def test_cos_input(self):
         def desired_filter_data(t): return np.ones_like(t)
-        rms_error = filter_rms_error(PIP,
-                                     np.cos,
-                                     desired_filter_data)
-        self.assertLess(rms_error, 0.01,
+        normalized_error = filter_rms_error(PIP,
+                                            np.cos,
+                                            desired_filter_data,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to correctly calculate the PIP of a "
                         "cosine.")
 
@@ -111,10 +123,11 @@ class TestPIP(unittest.TestCase):
             return np.maximum(np.sin(t), 0)
 
         def desired_filter_data(t): return np.ones_like(t)
-        rms_error = filter_rms_error(PIP,
-                                     to_filter_data,
-                                     desired_filter_data)
-        self.assertLess(rms_error, 0.01,
+        normalized_error = filter_rms_error(PIP,
+                                            to_filter_data,
+                                            desired_filter_data,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to correctly calculate the PIP of a "
                         "sine where the range is clipped to the reals "
                         "greater than 0.")
@@ -125,11 +138,12 @@ class TestPIP(unittest.TestCase):
 
         def desired_filter_data(t):
             return np.where(t < 2*np.pi, 1, 0.5)
-        rms_error = filter_rms_error(PIP,
-                                     to_filter_data,
-                                     desired_filter_data,
-                                     end_time=4*math.pi)
-        self.assertLess(rms_error, 0.01,
+        normalized_error = filter_rms_error(PIP,
+                                            to_filter_data,
+                                            desired_filter_data,
+                                            end_time=4*math.pi,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to correctly calculate PIP when there "
                         "is a step in amplitude in the breathing "
                         "waveform.")
@@ -140,24 +154,26 @@ class TestPIP(unittest.TestCase):
                             np.maximum(20*np.sin(3*t), 0) + 4,
                             4)
 
-        def desired_filter_data(t): return 20*np.ones_like(t)
-        rms_error = filter_rms_error(PIP,
-                                     to_filter_data,
-                                     desired_filter_data,
-                                     dt=0.125,
-                                     end_time=20*math.pi/3)
-        self.assertLess(rms_error, 0.01,
+        def desired_filter_data(t): return np.full_like(t, 20)
+        normalized_error = filter_rms_error(PIP,
+                                            to_filter_data,
+                                            desired_filter_data,
+                                            dt=0.125,
+                                            end_time=20*math.pi/3,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to calculate PIP for data that is sort "
                         "of similar to actual breathing data.")
 
     def test_actual_breathing_data(self):
-        rms_error = filter_rms_error(PIP,
-                                     actual_breathing_data,
-                                     actual_PIP_data,
-                                     dt=actual_data_dt,
-                                     start_time=actual_data_start_time,
-                                     end_time=actual_data_end_time)
-        self.assertLess(rms_error, 0.01,
+        normalized_error = filter_rms_error(PIP,
+                                            actual_breathing_data,
+                                            actual_PIP_data,
+                                            dt=actual_data_dt,
+                                            start_time=actual_data_start_time,
+                                            end_time=actual_data_end_time,
+                                            use_pressure_error=True)
+        self.assertLess(normalized_error, 1/safety_factor,
                         "Fails to correctly calculate PIP for actual "
                         "data.")
 
