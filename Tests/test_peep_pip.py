@@ -22,6 +22,7 @@ class TestPEEP(unittest.TestCase):
     def test_sin_input(self):
         class PEEPTester(PEEP):
             def __init__(self, dt):
+                # maximum_peep == actual PEEP + margin
                 super().__init__(dt, maximum_peep=-0.9)
 
         def desired_filter_data(t):
@@ -38,6 +39,7 @@ class TestPEEP(unittest.TestCase):
     def test_cos_input(self):
         class PEEPTester(PEEP):
             def __init__(self, dt):
+                # maximum_peep == actual PEEP + margin
                 super().__init__(dt, maximum_peep=-0.9)
 
         def desired_filter_data(t): return np.full_like(t, -1)
@@ -53,6 +55,7 @@ class TestPEEP(unittest.TestCase):
     def test_sin_greater_than_zero(self):
         class PEEPTester(PEEP):
             def __init__(self, dt):
+                # maximum_peep == actual PEEP + margin
                 super().__init__(dt, maximum_peep=0.1)
 
         def to_filter_data(t):
@@ -70,21 +73,30 @@ class TestPEEP(unittest.TestCase):
                         "greater than 0.")
 
     def test_approximate_breathing_data(self):
-        def to_filter_data(t):
-            # every 4th peak of max(20*sin(3t), 0)+4, plot:
-            # https://cdn.discordapp.com/attachments/610302955521966100/755223255836524624/unknown.png
-            return np.where((t % (3*20*np.pi/3/10)) < (20*np.pi/3/10),
-                            np.maximum(20*np.sin(3*t), 0) + 4,
-                            4)
+        peep = 4
+        pip = 20
+        frequency = 3
+        length_in_cycles = 10
 
-        def desired_filter_data(t): return np.full_like(t, 4)
-        normalized_error = filter_rms_error(PEEP,
-                                            to_filter_data,
-                                            desired_filter_data,
-                                            dt=0.125,
-                                            end_time=20*math.pi/3,
-                                            skip_initial=7,
-                                            use_pressure_error=True)
+        def to_filter_data(t):
+            # An idealized version of a breathing waveform
+            # https://cdn.discordapp.com/attachments/610302955521966100/755223255836524624/unknown.png
+            number_of_cycles_skipped = 3
+            return np.where(
+                ((t % (number_of_cycles_skipped * 2*np.pi / frequency))
+                 < (2*np.pi / frequency)),
+                np.maximum((pip - peep) * np.sin(frequency * t), 0) + peep,
+                peep)
+
+        def desired_filter_data(t): return np.full_like(t, peep)
+        normalized_error = filter_rms_error(
+            PEEP,
+            to_filter_data,
+            desired_filter_data,
+            dt=0.125,
+            end_time=2*np.pi * length_in_cycles / frequency,
+            skip_initial=7,
+            use_pressure_error=True)
         self.assertLess(normalized_error, 1/actual_data_safety_factor,
                         "Fails to calculate PEEP for data that is sort "
                         "of similar to actual breathing data.")
@@ -108,6 +120,7 @@ class TestPIP(unittest.TestCase):
     def test_sin_input(self):
         class PIPTester(PIP):
             def __init__(self, dt):
+                # minimum_pip == actual PIP - margin
                 super().__init__(dt, minimum_pip=0.9)
 
         def desired_filter_data(t): return np.ones_like(t)
@@ -123,6 +136,7 @@ class TestPIP(unittest.TestCase):
     def test_cos_input(self):
         class PIPTester(PIP):
             def __init__(self, dt):
+                # minimum_pip == actual PIP - margin
                 super().__init__(dt, minimum_pip=0.9)
 
         def desired_filter_data(t): return np.ones_like(t)
@@ -138,6 +152,7 @@ class TestPIP(unittest.TestCase):
     def test_sin_greater_than_zero(self):
         class PIPTester(PIP):
             def __init__(self, dt):
+                # minimum_pip == actual PIP - margin
                 super().__init__(dt, minimum_pip=0.9)
 
         def to_filter_data(t):
@@ -155,19 +170,30 @@ class TestPIP(unittest.TestCase):
                         "greater than 0.")
 
     def test_approximate_breathing_data(self):
-        def to_filter_data(t):
-            return np.where((t % (3*20*math.pi/3/10)) < (20*math.pi/3/10),
-                            np.maximum(20*np.sin(3*t), 0) + 4,
-                            4)
+        peep = 4
+        pip = 20
+        frequency = 3
+        length_in_cycles = 10
 
-        def desired_filter_data(t): return np.full_like(t, 24)
-        normalized_error = filter_rms_error(PIP,
-                                            to_filter_data,
-                                            desired_filter_data,
-                                            dt=0.125,
-                                            end_time=20*math.pi/3,
-                                            skip_initial=7,
-                                            use_pressure_error=True)
+        def to_filter_data(t):
+            # An idealized version of a breathing waveform
+            # https://cdn.discordapp.com/attachments/610302955521966100/755223255836524624/unknown.png
+            number_of_cycles_skipped = 3
+            return np.where(
+                ((t % (number_of_cycles_skipped * 2*np.pi / frequency))
+                 < (2*np.pi / frequency)),
+                np.maximum((pip - peep) * np.sin(frequency * t), 0) + peep,
+                peep)
+
+        def desired_filter_data(t): return np.full_like(t, pip)
+        normalized_error = filter_rms_error(
+            PIP,
+            to_filter_data,
+            desired_filter_data,
+            dt=0.125,
+            end_time=2*math.pi * length_in_cycles / frequency,
+            skip_initial=7,
+            use_pressure_error=True)
         self.assertLess(normalized_error, 1/actual_data_safety_factor,
                         "Fails to calculate PIP for data that is sort "
                         "of similar to actual breathing data.")
