@@ -18,6 +18,6 @@ RUN go build
 COPY requirements.txt /src/zmq_proxy
 RUN pip3 install -r /src/zmq_proxy/requirements.txt
 COPY *.py /src/zmq_proxy/
-COPY TestData/20200609T2358Z_patrickData.txt /src/zmq_proxy/TestData
+COPY Tests/TestData/20200609T2358Z_patrickData.txt /src/zmq_proxy/TestData
 COPY services.conf /etc/supervisor/conf.d/services.conf
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
