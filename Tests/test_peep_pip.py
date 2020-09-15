@@ -26,8 +26,7 @@ class TestPEEP(unittest.TestCase):
                                             np.sin,
                                             desired_filter_data,
                                             skip_initial=7,
-                                            use_pressure_error=True,
-                                            generate_plot=True)
+                                            use_pressure_error=True)
         self.assertLess(normalized_error, 1/fake_data_safety_factor,
                         "Fails to correctly calculate the PEEP of a "
                         "sine.")
