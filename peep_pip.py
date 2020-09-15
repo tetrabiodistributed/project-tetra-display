@@ -17,10 +17,21 @@ class PEEP():
 class PIP():
 
     def __init__(self, sampling_period, minimum_pressure=17):
-        pass
+        self._sampling_period = sampling_period
+        self._minimum_pressure = minimum_pressure
+        self._current_pip = minimum_pressure
+        self._currently_in_pip_range = False
 
     def append(self, datum):
-        pass
+        if datum > self._minimum_pressure:
+            if not self._currently_in_pip_range:
+                self._currently_in_pip_range = True
+                self._current_pip = datum
+            else:
+                if datum > self._current_pip:
+                    self._current_pip = datum
+        else:
+            self._currently_in_pip_range = False
 
     def get_datum(self):
-        return math.nan
+        return self._current_pip
