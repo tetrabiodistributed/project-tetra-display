@@ -36,8 +36,8 @@ def filter_rms_error(filter_object,
     start_time=0.0 : float
     end_time=10.0 : float
     dt=0.01 : float
-        Represents a time interval of [start_time, end_time) with steps
-        of dt between.  Calculated as
+        Represents a time interval in seconds of [start_time, end_time)
+        with steps of dt between.  Calculated as
         np.arange(start_time, end_time, dt).
     skip_initial=0 : int
         Ignores the first skip_inital data points when calculating
