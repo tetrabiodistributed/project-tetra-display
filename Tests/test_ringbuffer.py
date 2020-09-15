@@ -57,5 +57,11 @@ class TestRingBuffer(unittest.TestCase):
         for i in range(20):
             r.append(i)
         self.assertEqual(str(r), "<RingBuffer of length 10 and "
-                         "[10, 11, 12, 13, 14, 15, 16, 17, 18, 19]>",
+                                 "[10, 11, 12, 13, 14, 15, 16, 17, 18, 19]>",
                          "Fails to print RingBuffer to spec.")
+
+    def test_can_define_initial_state(self):
+        r = RingBuffer(10, initial_state=[5]*10)
+        self.assertEqual(r, [5]*10,
+                         "Fails to initialize a RingBuffer to a "
+                         "particular state.")
