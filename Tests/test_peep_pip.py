@@ -15,9 +15,13 @@ safety_factor = 2
 class TestPEEP(unittest.TestCase):
 
     def test_sin_input(self):
+        class PEEPTester(PEEP):
+            def __init__(self, dt):
+                super().__init__(dt, maximum_pressure=-0.5)
+
         def desired_filter_data(t):
             return np.full_like(t, -1)
-        normalized_error = filter_rms_error(PEEP,
+        normalized_error = filter_rms_error(PEEPTester,
                                             np.sin,
                                             desired_filter_data,
                                             use_pressure_error=True)
@@ -26,8 +30,12 @@ class TestPEEP(unittest.TestCase):
                         "sine.")
 
     def test_cos_input(self):
+        class PEEPTester(PEEP):
+            def __init__(self, dt):
+                super().__init__(dt, maximum_pressure=-0.5)
+
         def desired_filter_data(t): return np.full_like(t, -1)
-        normalized_error = filter_rms_error(PEEP,
+        normalized_error = filter_rms_error(PEEPTester,
                                             np.cos,
                                             desired_filter_data,
                                             use_pressure_error=True)
@@ -36,11 +44,15 @@ class TestPEEP(unittest.TestCase):
                         "cosine.")
 
     def test_sin_greater_than_zero(self):
+        class PEEPTester(PEEP):
+            def __init__(self, dt):
+                super().__init__(dt, maximum_pressure=0.25)
+
         def to_filter_data(t):
             return np.maximum(np.sin(t), 0)
 
         def desired_filter_data(t): return np.zeros_like(t)
-        normalized_error = filter_rms_error(PEEP,
+        normalized_error = filter_rms_error(PEEPTester,
                                             to_filter_data,
                                             desired_filter_data,
                                             use_pressure_error=True)
@@ -50,12 +62,16 @@ class TestPEEP(unittest.TestCase):
                         "greater than 0.")
 
     def test_sin_step_in_amplitude(self):
+        class PEEPTester(PEEP):
+            def __init__(self, dt):
+                super().__init__(dt, maximum_pressure=-0.25)
+
         def to_filter_data(t):
             return np.where(t < 2*np.pi, np.sin(t), 0.5*np.sin(t))
 
         def desired_filter_data(t):
             return np.where(t < 2*np.pi, -1, -0.5)
-        normalized_error = filter_rms_error(PEEP,
+        normalized_error = filter_rms_error(PEEPTester,
                                             to_filter_data,
                                             desired_filter_data,
                                             end_time=4*math.pi,
@@ -67,7 +83,8 @@ class TestPEEP(unittest.TestCase):
 
     def test_approximate_breathing_data(self):
         def to_filter_data(t):
-            # every 4th peak of max(20*sin(3t), 0)
+            # every 4th peak of max(20*sin(3t), 0)+4, plot:
+            # https://cdn.discordapp.com/attachments/610302955521966100/755223255836524624/unknown.png
             return np.where((t % (3*20*np.pi/3/10)) < (20*np.pi/3/10),
                             np.maximum(20*np.sin(3*t), 0) + 4,
                             4)
@@ -99,8 +116,12 @@ class TestPEEP(unittest.TestCase):
 class TestPIP(unittest.TestCase):
 
     def test_sin_input(self):
+        class PIPTester(PIP):
+            def __init__(self, dt):
+                super().__init__(dt, minimum_pressure=0.5)
+
         def desired_filter_data(t): return np.ones_like(t)
-        normalized_error = filter_rms_error(PIP,
+        normalized_error = filter_rms_error(PIPTester,
                                             np.sin,
                                             desired_filter_data,
                                             use_pressure_error=True)
@@ -109,8 +130,12 @@ class TestPIP(unittest.TestCase):
                         "sine.")
 
     def test_cos_input(self):
+        class PIPTester(PIP):
+            def __init__(self, dt):
+                super().__init__(dt, minimum_pressure=0.5)
+
         def desired_filter_data(t): return np.ones_like(t)
-        normalized_error = filter_rms_error(PIP,
+        normalized_error = filter_rms_error(PIPTester,
                                             np.cos,
                                             desired_filter_data,
                                             use_pressure_error=True)
@@ -119,11 +144,15 @@ class TestPIP(unittest.TestCase):
                         "cosine.")
 
     def test_sin_greater_than_zero(self):
+        class PIPTester(PIP):
+            def __init__(self, dt):
+                super().__init__(dt, minimum_pressure=0.75)
+
         def to_filter_data(t):
             return np.maximum(np.sin(t), 0)
 
         def desired_filter_data(t): return np.ones_like(t)
-        normalized_error = filter_rms_error(PIP,
+        normalized_error = filter_rms_error(PIPTester,
                                             to_filter_data,
                                             desired_filter_data,
                                             use_pressure_error=True)
@@ -133,12 +162,16 @@ class TestPIP(unittest.TestCase):
                         "greater than 0.")
 
     def test_sin_step_in_amplitude(self):
+        class PIPTester(PIP):
+            def __init__(self, dt):
+                super().__init__(dt, minimum_pressure=0.25)
+
         def to_filter_data(t):
             return np.where(t < 2*np.pi, np.sin(t), 0.5*np.sin(t))
 
         def desired_filter_data(t):
             return np.where(t < 2*np.pi, 1, 0.5)
-        normalized_error = filter_rms_error(PIP,
+        normalized_error = filter_rms_error(PIPTester,
                                             to_filter_data,
                                             desired_filter_data,
                                             end_time=4*math.pi,
