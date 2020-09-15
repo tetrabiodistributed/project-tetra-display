@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plot
+import matplotlib.pyplot as plt
 
 
 def filter_rms_error(filter_object,
@@ -86,9 +86,11 @@ def filter_rms_error(filter_object,
                                   test_filter.get_datum())
 
     if generate_plot:
-        plot.plot(t, filtered_data,
-                  t, desired_filtered_data)
-        plot.show()
+        figure, axis = plt.subplots()
+        axis.plot(t, filtered_data, label="Filtered Data")
+        axis.plot(t, desired_filtered_data, label="Desired Filtered Data")
+        legend = axis.legend()
+        plt.show()
 
     if not use_pressure_error:
         return _root_mean_square(
