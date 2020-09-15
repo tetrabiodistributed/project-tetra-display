@@ -9,6 +9,10 @@ from filter_rms_error import filter_rms_error
 from process_sample_data import ProcessSampleData
 
 
+# How many times less than the maximum tolerance allowed per
+# ISO 80601-2-80:2018 201.12.4.101.1 I would like the filter to be
+# accurate to.  Fake data has a higher bar because there's very little
+# noise.
 fake_data_safety_factor = 8
 actual_data_safety_factor = 2
 
@@ -18,7 +22,7 @@ class TestPEEP(unittest.TestCase):
     def test_sin_input(self):
         class PEEPTester(PEEP):
             def __init__(self, dt):
-                super().__init__(dt, maximum_pressure=-0.9)
+                super().__init__(dt, maximum_peep=-0.9)
 
         def desired_filter_data(t):
             return np.full_like(t, -1)
@@ -34,7 +38,7 @@ class TestPEEP(unittest.TestCase):
     def test_cos_input(self):
         class PEEPTester(PEEP):
             def __init__(self, dt):
-                super().__init__(dt, maximum_pressure=-0.9)
+                super().__init__(dt, maximum_peep=-0.9)
 
         def desired_filter_data(t): return np.full_like(t, -1)
         normalized_error = filter_rms_error(PEEPTester,
@@ -49,7 +53,7 @@ class TestPEEP(unittest.TestCase):
     def test_sin_greater_than_zero(self):
         class PEEPTester(PEEP):
             def __init__(self, dt):
-                super().__init__(dt, maximum_pressure=0.1)
+                super().__init__(dt, maximum_peep=0.1)
 
         def to_filter_data(t):
             return np.maximum(np.sin(t), 0)
@@ -104,7 +108,7 @@ class TestPIP(unittest.TestCase):
     def test_sin_input(self):
         class PIPTester(PIP):
             def __init__(self, dt):
-                super().__init__(dt, minimum_pressure=0.9)
+                super().__init__(dt, minimum_pip=0.9)
 
         def desired_filter_data(t): return np.ones_like(t)
         normalized_error = filter_rms_error(PIPTester,
@@ -119,7 +123,7 @@ class TestPIP(unittest.TestCase):
     def test_cos_input(self):
         class PIPTester(PIP):
             def __init__(self, dt):
-                super().__init__(dt, minimum_pressure=0.9)
+                super().__init__(dt, minimum_pip=0.9)
 
         def desired_filter_data(t): return np.ones_like(t)
         normalized_error = filter_rms_error(PIPTester,
@@ -134,7 +138,7 @@ class TestPIP(unittest.TestCase):
     def test_sin_greater_than_zero(self):
         class PIPTester(PIP):
             def __init__(self, dt):
-                super().__init__(dt, minimum_pressure=0.9)
+                super().__init__(dt, minimum_pip=0.9)
 
         def to_filter_data(t):
             return np.maximum(np.sin(t), 0)

@@ -3,6 +3,7 @@ import math
 from scipy import signal
 
 from ringbuffer import RingBuffer
+import constants
 
 
 class PEEP():
@@ -12,7 +13,7 @@ class PEEP():
 
     def __init__(self,
                  sampling_period,
-                 maximum_pressure=8.23,
+                 maximum_peep=constants.MAXIMUM_PEEP,
                  window_length=5,
                  polynomial_order=3,
                  buffer_length=10):
@@ -21,7 +22,7 @@ class PEEP():
         ----------
         sampling_period : float
             The amount of time between data samples.
-        maximum_pressure=8.23 : float
+        maximum_peep=constants.MAXIMUM_PEEP : float
             The maximum pressure considered to be PEEP.
         window_length=5 : int
             The number of points sampled for a low-pass filter of the
@@ -33,7 +34,7 @@ class PEEP():
             The number of data points considered when smoothing.
         """
         self._peak_finder = PIP(sampling_period,
-                                minimum_pressure=-maximum_pressure,
+                                minimum_pip=-maximum_peep,
                                 window_length=window_length,
                                 polynomial_order=polynomial_order,
                                 buffer_length=buffer_length)
@@ -54,7 +55,7 @@ class PIP():
 
     def __init__(self,
                  sampling_period,
-                 minimum_pressure=17,
+                 minimum_pip=constants.MINIMUM_PIP,
                  window_length=5,
                  polynomial_order=3,
                  buffer_length=10):
@@ -63,7 +64,7 @@ class PIP():
         ----------
         sampling_period : float
             The amount of time between data samples.
-        minimum_pressure=8.23 : float
+        minimum_pip=constants.MINIMUM_PIP : float
             The maximum pressure considered to be PIP.
         window_length=5 : int
             The number of points sampled for a low-pass filter of the
@@ -83,19 +84,19 @@ class PIP():
                              "than window_length")
 
         self._sampling_period = sampling_period
-        self._minimum_pressure = minimum_pressure
+        self._minimum_pip = minimum_pip
         self._currently_in_pip_range = False
-        self._current_pip = minimum_pressure
+        self._current_pip = minimum_pip
         self._window_length = window_length
         self._polynomial_order = polynomial_order
         self._buffer_length = buffer_length
         self._data_buffer = RingBuffer(
             buffer_length,
-            initial_state=[minimum_pressure]*buffer_length)
+            initial_state=[minimum_pip]*buffer_length)
 
     def append(self, datum):
         """Adds a datum to the data buffer."""
-        if datum > self._minimum_pressure:
+        if datum > self._minimum_pip:
             self._currently_in_pip_range = True
             if datum > self._data_buffer[-1]:
                 self._update_pip(datum)
