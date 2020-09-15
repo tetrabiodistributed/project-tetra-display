@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plot
 
 
 def filter_rms_error(filter_object,
@@ -10,7 +11,8 @@ def filter_rms_error(filter_object,
                      skip_initial=0,
                      use_pressure_error=False,
                      abs_tol=2.0,
-                     rel_tol=0.02):
+                     rel_tol=0.02,
+                     generate_plot=False):
     """Calculates root-mean-square (RMS) error between data calculated
     by a filter and a reference function that nominally should yield
     equal data.
@@ -53,6 +55,11 @@ def filter_rms_error(filter_object,
     rel_tol=0.02 : float
         The design relative tolerance when calculating pressure error,
         i.e. +/- rel_tol * desired_filter_data(t).
+    generate_plot=False : bool
+        If True, then a plot of the filter data and
+        desired_filter_data_lambda with respect to time will be
+        generated.  Note that this should be false in non-interactive
+        contexts.
 
     Returns
     -------
@@ -77,6 +84,11 @@ def filter_rms_error(filter_object,
         test_filter.append(to_filter_data[i])
         filtered_data = np.append(filtered_data,
                                   test_filter.get_datum())
+
+    if generate_plot:
+        plot.plot(t, filtered_data,
+                  t, desired_filtered_data)
+        plot.show()
 
     if not use_pressure_error:
         return _root_mean_square(
