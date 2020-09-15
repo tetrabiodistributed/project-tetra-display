@@ -6,6 +6,9 @@ from ringbuffer import RingBuffer
 
 
 class PEEP():
+    """A filter that takes a pressure waveform and gives the
+    Positive-End Expiratory Pressure (PEEP).
+    """
 
     def __init__(self,
                  sampling_period,
@@ -13,6 +16,22 @@ class PEEP():
                  window_length=5,
                  polynomial_order=3,
                  buffer_length=10):
+        """
+        Parameters
+        ----------
+        sampling_period : float
+            The amount of time between data samples.
+        maximum_pressure=8.23 : float
+            The maximum pressure considered to be PEEP.
+        window_length=5 : int
+            The number of points sampled for a low-pass filter of the
+            data.  It must be odd.
+        polynomial_order=3 : int
+            The order of the Savitsky-Golay filter used to smooth the
+            data.  It must be less than window_length.
+        buffer_length=10 : int
+            The number of data points considered when smoothing.
+        """
         self._peak_finder = PIP(sampling_period,
                                 minimum_pressure=-maximum_pressure,
                                 window_length=window_length,
@@ -20,13 +39,18 @@ class PEEP():
                                 buffer_length=buffer_length)
 
     def append(self, datum):
+        """Adds a datum to the data buffer."""
         self._peak_finder.append(-datum)
 
     def get_datum(self):
+        """Returns the current PEEP value."""
         return -self._peak_finder.get_datum()
 
 
 class PIP():
+    """A filter that takes a pressure waveform and gives the
+    Peak Inspiratory Pressure (PIP).
+    """
 
     def __init__(self,
                  sampling_period,
@@ -34,6 +58,30 @@ class PIP():
                  window_length=5,
                  polynomial_order=3,
                  buffer_length=10):
+        """
+        Parameters
+        ----------
+        sampling_period : float
+            The amount of time between data samples.
+        minimum_pressure=8.23 : float
+            The maximum pressure considered to be PIP.
+        window_length=5 : int
+            The number of points sampled for a low-pass filter of the
+            data.  It must be odd.
+        polynomial_order=3 : int
+            The order of the Savitsky-Golay filter used to smooth the
+            data.  It must be less than window_length.
+        buffer_length=10 : int
+            The number of data points considered when smoothing.
+        """
+        if (window_length > buffer_length):
+            raise ValueError("window_length must be <= buffer_length")
+        if (window_length % 2 != 1):
+            raise ValueError("window_length must be odd")
+        if (buffer_length <= window_length):
+            raise ValueError("buffer_length must be greater in length "
+                             "than window_length")
+
         self._sampling_period = sampling_period
         self._minimum_pressure = minimum_pressure
         self._currently_in_pip_range = False
@@ -46,6 +94,7 @@ class PIP():
             initial_state=[minimum_pressure]*buffer_length)
 
     def append(self, datum):
+        """Adds a datum to the data buffer."""
         if datum > self._minimum_pressure:
             self._currently_in_pip_range = True
             if datum > self._data_buffer[-1]:
@@ -56,6 +105,7 @@ class PIP():
             self._currently_in_pip_range = False
 
     def get_datum(self):
+        """Returns the current PIP value."""
         return self._current_pip
 
     def _update_pip(self, datum):
