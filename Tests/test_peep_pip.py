@@ -18,7 +18,7 @@ class TestPEEP(unittest.TestCase):
     def test_sin_input(self):
         class PEEPTester(PEEP):
             def __init__(self, dt):
-                super().__init__(dt, maximum_pressure=-0.5)
+                super().__init__(dt, maximum_pressure=-0.9)
 
         def desired_filter_data(t):
             return np.full_like(t, -1)
@@ -26,7 +26,8 @@ class TestPEEP(unittest.TestCase):
                                             np.sin,
                                             desired_filter_data,
                                             skip_initial=7,
-                                            use_pressure_error=True)
+                                            use_pressure_error=True,
+                                            generate_plot=True)
         self.assertLess(normalized_error, 1/fake_data_safety_factor,
                         "Fails to correctly calculate the PEEP of a "
                         "sine.")
