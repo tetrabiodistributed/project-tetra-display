@@ -2,8 +2,8 @@ import os
 from behave import given, when, then
 import warnings
 
+from sensors import NotEnoughSensors
 import server
-from sensors import Sensors, NotEnoughSensors
 import constants
 
 
