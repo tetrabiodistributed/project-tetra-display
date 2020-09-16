@@ -193,8 +193,9 @@ except NotImplementedError:
             pass
 
         def scan(self):
-            return [random.randrange(0, 0x80)
-                    for _ in range(random.randrange(0, 10))]
+            # illegal i2c address to avoid accidentally confirming a
+            # device is present.
+            return [0xff] * random.randrange(0, 10)
 
         def find_device(self, timeout=5):
             pass
