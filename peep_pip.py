@@ -1,5 +1,3 @@
-import math
-
 from scipy import signal
 
 from ringbuffer import RingBuffer

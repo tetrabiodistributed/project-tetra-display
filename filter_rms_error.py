@@ -79,7 +79,6 @@ def filter_rms_error(filter_object,
     to_filter_data = to_filter_data_lambda(t)
     filtered_data = np.array([])
     desired_filtered_data = desired_filter_data_lambda(t)
-    error = np.array([])
     for i in range(len(to_filter_data)):
         test_filter.append(to_filter_data[i])
         filtered_data = np.append(filtered_data,
@@ -89,7 +88,7 @@ def filter_rms_error(filter_object,
         figure, axis = plt.subplots()
         axis.plot(t, filtered_data, label="Filtered Data")
         axis.plot(t, desired_filtered_data, label="Desired Filtered Data")
-        legend = axis.legend()
+        axis.legend()
         plt.show()
 
     if not use_pressure_error:
