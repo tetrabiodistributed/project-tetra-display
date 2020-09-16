@@ -1,7 +1,5 @@
-import sys
 import time
 import json
-import random
 
 import zmq
 
@@ -59,7 +57,6 @@ def main():
             while (time.time() - start_time < 1.0):
                 time.sleep(0.1)
         except:
-            running = False
             raise
 
 
