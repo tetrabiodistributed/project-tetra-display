@@ -123,6 +123,8 @@ try:
                     raise DeviceNotFoundError("Could not find I2C "
                                               "device at address "
                                               f"{self._i2c_address}")
+                else:
+                    time.sleep(0.010)
 
         def read_register(self, register, number_of_bytes=1):
             return self._read(register=register,

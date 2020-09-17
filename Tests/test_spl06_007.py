@@ -380,7 +380,7 @@ class TestCommunicator(unittest.TestCase):
                         "Fails to return raw temperature as a 24-bit "
                         "2's complement number.")
 
-    def test_raw_temperature(self):
+    def test_raw_pressure(self):
         self._communicator.set_op_mode(PressureSensor.OpMode.command)
         self._communicator.set_pressure_sampling()
         raw_pressure = self._communicator.raw_pressure()
