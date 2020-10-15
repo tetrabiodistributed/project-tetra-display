@@ -1,3 +1,4 @@
+import os
 from behave.fixture import use_fixture_by_tag
 
 import docker
@@ -15,7 +16,9 @@ def before_all(context):
 
 def after_scenario(context, step):
     try:
-        context.client.containers.get(context.container_name).kill()
+        # TODO: figure out why I can't .get with the python binding
+        # context.client.containers.get(context.container_name).kill()
+        os.system(f"docker kill {context.container_name} > /dev/null 2>&1")
     except docker.errors.NotFound:
         pass
 
