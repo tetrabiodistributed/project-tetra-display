@@ -209,11 +209,13 @@ class Calibrator():
                               / self._temperature_scaling_factor)
 
         compensated_pressure0 = (self._c10 +
-                                 (scaled_pressure * (self._c20 + scaled_pressure * self._c30)))
+                                 (scaled_pressure *
+                                  (self._c20 + scaled_pressure * self._c30)))
         compensated_pressure1 = scaled_temperature * \
             scaled_pressure * (self._c11 + scaled_pressure * self._c21)
-        compensated_pressure = self._c00 + scaled_pressure * compensated_pressure0 + \
-            scaled_temperature * self._c01 + compensated_pressure1
+        compensated_pressure = (
+            self._c00 + scaled_pressure * compensated_pressure0
+            + scaled_temperature * self._c01 + compensated_pressure1)
         return compensated_pressure
 
     def temperature(self, raw_temperature):
@@ -229,7 +231,6 @@ class Calibrator():
         compensated_temperature = (
             self._c0 * 0.5 + self._c1 * scaled_temperature
         )
-        print('t_comp = ', compensated_temperature)
         return compensated_temperature
 
 
@@ -406,20 +407,14 @@ class Communicator():
 
         pressure_msb = self._i2c.read_register(
             SensorConstants.PRS_B2)
-        print('sensor[0] = ', pressure_msb)
         pressure_lsb = self._i2c.read_register(
             SensorConstants.PRS_B1)
-        print('sensor[1] = ', pressure_lsb)
         pressure_xlsb = self._i2c.read_register(
             SensorConstants.PRS_B0)
-        print('sensor[2] = ', pressure_xlsb)
 
         press_raw0 = (pressure_msb << 16) | (pressure_lsb << 8) | pressure_xlsb
-        print('press_raw0 = ', press_raw0)
         press_raw1 = -16777216 if(pressure_msb & 0x80) else 0
-        print('press_raw1 = ', press_raw1)
         pressure = press_raw0 | press_raw1
-        print('press_raw = ', pressure)
         return pressure
 
     @property
@@ -491,21 +486,14 @@ class Communicator():
                     & SensorConstants.TMP_RDY != 0)
         self._wait_for_condition_else_timeout(temperature_ready, 4)
 
-        print("multibyte:\t", self._i2c.read_register(3,
-                                                      number_of_bytes=3))
-
         temperature_msb = self._i2c.read_register(
             SensorConstants.TMP_B2)
-        print('sensor[3] = ', temperature_msb)
         temperature_lsb = self._i2c.read_register(
             SensorConstants.TMP_B1)
-        print('sensor[4] = ', temperature_lsb)
         temperature_xlsb = self._i2c.read_register(
             SensorConstants.TMP_B0)
-        print('sensor[5] = ', temperature_xlsb)
         temperature = (temperature_msb << 16) | (
             temperature_lsb << 8) | temperature_xlsb
-        print('tempRaw = ', temperature)
 
         return temperature
 
@@ -553,37 +541,23 @@ class Communicator():
         c[15] = self._i2c.read_register(SensorConstants.C21_7_0)
         c[16] = self._i2c.read_register(SensorConstants.C30_15_8)
         c[17] = self._i2c.read_register(SensorConstants.C30_7_0)
-        print('c = ', ' '.join(map(str, c)))
 
-        def most_significant_nibble(byte): return (byte & 0xf0) >> 4
-
-        def least_significant_nibble(byte): return byte & 0x0f
-
-        c0 = c[0] << 4 | c[1] >> 4  # working... returns 200
+        c0 = c[0] << 4 | c[1] >> 4
 
         c1 = (c[1] & 0x0f) << 8 | c[2]
         c1 = (-4096 | c1) if c1 & 1 << 11 else c1
-        print('c1=', c1)
 
         c00 = c[3] << 12 | c[4] << 4 | c[5] >> 4
-        #c00 = (0xfff00000 | c00) if (c00 & 1 << 19) else c00;
-        print('c00= ', c00)
 
         c10 = ((c[5] & 0x0F) << 16) | (c[6] << 8) | c[7]
         c10_temp = -1048576 if(c[5] & 0x8) else 0
         c10 = c10 | c10_temp
-        print('c10=', c10)
 
         c01 = c[8] << 8 | c[9]
         c11 = c[10] << 8 | c[11]
         c20 = c[12] << 8 | c[13]
         c21 = c[14] << 8 | c[15]
         c30 = c[16] << 8 | c[17]
-        print('c01=', c01)
-        print('c11=', c11)
-        print('c20=', c20)
-        print('c21=', c21)
-        print('c30=', c30)
 
         self._calibration_coefficients = (c0, c1,
                                           c00, c10, c01, c11, c20, c21, c30)
