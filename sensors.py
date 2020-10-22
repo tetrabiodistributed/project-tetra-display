@@ -65,12 +65,13 @@ if is_on_raspberry_pi():
     class Sensors(SensorsABC):
 
         def __init__(self, dump_communication=False):
-            self._pressure_mux = I2CMux(constants.PRESSURE_SENSOR_MUX_ADDRESS)
+            self._pressure_mux = I2CMux(constants.PRESSURE_SENSOR_MUX_ADDRESS,
+                                        dump_communication=dump_communication)
             self._pressure_sensors = []
             for i in range(constants.NUMBER_OF_PRESSURE_SENSORS):
                 self._pressure_mux.select_channel(i)
-                self._pressure_sensors.append(PressureSensor(
-                    dump_communication=dump_communication))
+                self._pressure_sensors.append(
+                    PressureSensor(dump_communication=dump_communication))
                 self._pressure_sensors[i].set_sampling(
                     pressure_oversample=constants.PRESSURE_OVERSAMPLING,
                     pressure_sampling_rate=constants.PRESSURE_SAMPLING_RATE,
@@ -81,19 +82,19 @@ if is_on_raspberry_pi():
                 self._pressure_sensors[i].set_op_mode(
                     PressureSensor.OpMode.command)
 
-            self._flow_mux = I2CMux(constants.FLOW_SENSOR_MUX_ADDRESS)
+            self._flow_mux = I2CMux(constants.FLOW_SENSOR_MUX_ADDRESS,
+                                    dump_communication=dump_communication)
             self._flow_sensors = []
             for i in range(constants.NUMBER_OF_SENSIRION_SENSORS):
                 self._flow_mux.select_channel(i)
-                self._flow_sensors.append(FlowSensor(
-                    dump_communication=dump_communication))
+                self._flow_sensors.append(
+                    FlowSensor(dump_communication=dump_communication))
 
             self._mass_airflow_sensors = []
             for i in range(constants.NUMBER_OF_MASS_AIRFLOW_SENSORS):
                 pass
 
         def close(self):
-
             for i in range(constants.NUMBER_OF_PRESSURE_SENSORS):
                 self._pressure_mux.select_channel(i)
                 self._pressure_sensors[i].close()

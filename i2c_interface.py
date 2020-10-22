@@ -137,15 +137,16 @@ try:
             self._i2c.writeto(self._i2c_address, bytes([register, to_write]))
 
             if self._dump_communication:
-                print(f"{1000*time.time():.4f} "
-                      "TX -> 0x" + bytes([register, to_write]).hex())
+                print(f"{1000*time.time():.4f} 0x{self._i2c_address:02x}"
+                      " TX -> 0x" + bytes([register, to_write]).hex())
 
         def write_data(self, data):
             byte_data = self._int_to_bytearray(data)
             self._i2c.writeto(self._i2c_address, byte_data)
 
             if self._dump_communication:
-                print(f"{1000*time.time():.4f} TX -> 0x" + byte_data.hex())
+                print(f"{1000*time.time():.4f} 0x{self._i2c_address:02x}"
+                      f" TX -> 0x" + byte_data.hex())
 
         def _read(self, register=None, number_of_bytes=1):
             if number_of_bytes < 1:
@@ -161,9 +162,11 @@ try:
 
             if self._dump_communication:
                 if register is not None:
-                    print(f"{1000*time.time():.4f} TX -> 0x"
+                    print(f"{1000*time.time():.4f} "
+                          f"0x{self._i2c_address:02x} TX -> 0x"
                           + byte_register.hex())
-                print(f"{1000*time.time():.4f} RX <- 0x{data.hex()}")
+                print(f"{1000*time.time():.4f} 0x{self._i2c_address:02x}"
+                      f" RX <- 0x{data.hex()}")
 
             if number_of_bytes == 1:
                 return int(data.hex(), 16)
@@ -174,10 +177,11 @@ try:
             if integer != 0:
                 return (
                     bytearray(
-                        reversed([(integer >> 8*i) & 0xff
-                                  for i in range(math.ceil((math.log2(integer)
-                                                            + 1)/8))
-                                  ])))
+                        reversed(
+                            [(integer >> 8*i) & 0xff
+                             for i in range(math.ceil((math.log2(integer) + 1)
+                                                      / 8))
+                             ])))
             else:
                 return bytearray([0])
 
