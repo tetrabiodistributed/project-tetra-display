@@ -255,7 +255,7 @@ class Communicator():
     _READY_WAIT_TIME = 0.0036
 
     def __init__(self, SDO_high=True, dump_communication=False):
-        """The sensor takes(107 +/- 8) ms to initialize."""
+        """The sensor takes(107 ± 8) ms to initialize."""
         if SDO_high:
             self._i2c_address = SensorConstants.DEVICE_ADDRESS_SDO_HIGH
         else:
@@ -413,7 +413,7 @@ class Communicator():
             SensorConstants.PRS_B0)
 
         press_raw0 = (pressure_msb << 16) | (pressure_lsb << 8) | pressure_xlsb
-        press_raw1 = -16777216 if(pressure_msb & 0x80) else 0
+        press_raw1 = -16777216 if (pressure_msb & 0x80) else 0
         pressure = press_raw0 | press_raw1
         return pressure
 

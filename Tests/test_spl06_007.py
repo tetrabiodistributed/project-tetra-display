@@ -104,7 +104,7 @@ class TestPressureSensor(unittest.TestCase):
                                      standard_temperature,
                                      rel_tol=0.50),
                         f"{measured_temperature} != "
-                        "20 +/- 50% degC :\n"
+                        "20 ± 50% degC :\n"
                         "Fails to return ambient temperature in "
                         "degC.\nNote that if this test is "
                         "performed in a very cold or hot "
@@ -122,7 +122,7 @@ class TestPressureSensor(unittest.TestCase):
         self.assertTrue(math.isclose(measured_pressure, standard_pressure,
                                      rel_tol=0.10),
                         f"{measured_pressure} != "
-                        "101325 +/- 10% Pa :\n"
+                        "101325 ± 10% Pa :\n"
                         "Fails to return ambient pressure in Pa.\n"
                         "Note that if this test is performed in a "
                         "very low pressure environment,\nthe ambient "
