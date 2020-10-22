@@ -122,7 +122,7 @@ try:
                 if time.time() - start_time > timeout:
                     raise DeviceNotFoundError("Could not find I2C "
                                               "device at address "
-                                              f"{self._i2c_address}")
+                                              f"0x{self._i2c_address:02X}")
                 else:
                     time.sleep(0.010)
 
