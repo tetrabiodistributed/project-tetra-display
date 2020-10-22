@@ -73,9 +73,10 @@ if is_on_raspberry_pi():
                     dump_communication=dump_communication))
                 self._pressure_sensors[i].set_sampling(
                     pressure_oversample=constants.PRESSURE_OVERSAMPLING,
-                    pressure_sampling_rate=constants.PRESSURE_RATE,
+                    pressure_sampling_rate=constants.PRESSURE_SAMPLING_RATE,
                     temperature_oversample=constants.TEMPERATURE_OVERSAMPLING,
-                    temperature_sampling_rate=constants.TEMPERATURE_RATE
+                    temperature_sampling_rate=(
+                        constants.TEMPERATURE_SAMPLING_RATE)
                 )
                 self._pressure_sensors[i].set_op_mode(
                     PressureSensor.OpMode.command)
@@ -84,7 +85,6 @@ if is_on_raspberry_pi():
             self._flow_sensors = []
             for i in range(constants.NUMBER_OF_SENSIRION_SENSORS):
                 self._flow_mux.select_channel(i)
-                # print(f"i{i} {self._flow_mux.scan()}")
                 self._flow_sensors.append(FlowSensor(
                     dump_communication=dump_communication))
 
