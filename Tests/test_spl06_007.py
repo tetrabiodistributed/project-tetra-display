@@ -100,11 +100,12 @@ class TestPressureSensor(unittest.TestCase):
         self._sensor.set_sampling(temperature_sampling_rate=8)
         measured_temperature = self._sensor.temperature()
         standard_temperature = 20  # degC
+        relative_tolerance = 0.50
         self.assertTrue(math.isclose(measured_temperature,
                                      standard_temperature,
-                                     rel_tol=0.50),
+                                     rel_tol=relative_tolerance),
                         f"{measured_temperature} != "
-                        "20 ± 50% degC :\n"
+                        f"20 ± {int(100*relative_tolerance)}% degC :\n"
                         "Fails to return ambient temperature in "
                         "degC.\nNote that if this test is "
                         "performed in a very cold or hot "
@@ -119,10 +120,11 @@ class TestPressureSensor(unittest.TestCase):
         self._sensor.set_op_mode(PressureSensor.OpMode.command)
         measured_pressure = self._sensor.pressure()
         standard_pressure = 101325  # Pa
+        relative_tolerance = 0.10
         self.assertTrue(math.isclose(measured_pressure, standard_pressure,
-                                     rel_tol=0.10),
+                                     rel_tol=relative_tolerance),
                         f"{measured_pressure} != "
-                        "101325 ± 10% Pa :\n"
+                        f"101325 ± {int(100*relative_tolerance)}% Pa :\n"
                         "Fails to return ambient pressure in Pa.\n"
                         "Note that if this test is performed in a "
                         "very low pressure environment,\nthe ambient "
