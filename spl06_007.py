@@ -21,8 +21,8 @@ class PressureSensor():
     def __enter__(self):
         return self._communicator.__enter__()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._communicator.__exit__(exc_type, exc_val, exc_tb)
+    def __exit__(self, type, value, traceback):
+        self._communicator.__exit__(type, value, traceback)
 
     def close(self):
         """Deinitializes and unlocks the I2C bus."""
@@ -270,7 +270,7 @@ class Communicator():
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, type, value, traceback):
         self.close()
 
     def close(self):
