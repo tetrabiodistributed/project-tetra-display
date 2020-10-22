@@ -5,11 +5,31 @@ Ventilator Splitter Display
 
 A system to take pressure and flow data from sensors on a ventilator splitter, calculate descriptive parameters based on these data like PEEP or Tidal Volume, and display them for medical professionals to monitor.  This is for use against COVID-19.
 
-To set up the display program for tests, first make sure you have `chromedriver` installed (macOS: `brew install chromedriver`, linux: `sudo apt install chromedriver`).  `chromedriver` makes it possible to validate the display output.  Then run `./setup.sh` to build the virtual environment and then `. venv/bin/activate` to activate the virtual environment.
+To set up the display program for tests, first install the dependencies.  You can skip the chromedriver steps if you don't plan on testing.
 
-To do the tests, run `./runtests.sh`.  Running this script will first show the results of the behaviour tests and then the unit tests.  When you're done, you can shut down the venv with `deactivate`.
+Linux
+```bash
+curl -sSL https://get.docker.com | sh
+sudo apt install libatlas-base-dev python3-numpy
+sudo ./chromedriverinstall.sh
+./setup.sh
+```
 
-To run the display, first make sure Docker is installed, then run these commands.
+macOS
+```bash
+brew install chromedriver docker
+./setup.sh
+```
+
+To run tests, activate the virtual environment and then run the test script.
+
+```bash
+. venv/bin/activate
+./runtests.sh
+deactivate
+```
+
+To run the display, run these commands.
 
 ```bash
 docker build -t zmq_proxy:latest .
