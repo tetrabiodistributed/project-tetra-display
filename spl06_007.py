@@ -331,7 +331,7 @@ class Communicator():
         """
         return self._calibration_coefficients
 
-    def set_pressure_sampling(self, oversample=16, rate=1):
+    def set_pressure_sampling(self, oversample=1, rate=16):
         """Set the amount of oversampling and the sampling rate
 
         Parameters
@@ -394,24 +394,24 @@ class Communicator():
         def pressure_ready():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.PRS_RDY != 0)
-        self._wait_for_condition_else_timeout(pressure_ready, 4)
+        self._wait_for_condition_else_timeout(
+            pressure_ready, 4, expected_delay=0.020)
 
         pressure_data = self._i2c.read_register(SensorConstants.PRS_B2,
                                                 number_of_bytes=3)
 
-        print(pressure_data)
-
         uint_pressure = ((pressure_data[0] << 16)
                          | (pressure_data[1] << 8)
                          | pressure_data[2])
-        return self._twos_complement(uint_pressure, 24)
+        return self._twos_complement(uint_pressure,
+                                     SensorConstants.PRESSURE_BIT_WIDTH)
 
     @property
     def pressure_scale_factor(self):
         """A constant used for calibrating the sensor."""
         return self._pressure_scale_factor
 
-    def set_temperature_sampling(self, oversample=1, rate=1):
+    def set_temperature_sampling(self, oversample=1, rate=16):
         """Set the amount of oversampling and the sampling rate.
 
         Parameters
@@ -470,21 +470,18 @@ class Communicator():
         def temperature_ready():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.TMP_RDY != 0)
-        self._wait_for_condition_else_timeout(temperature_ready, 4)
+        self._wait_for_condition_else_timeout(
+            temperature_ready, 4, expected_delay=0.035)
 
-        temperature_msb = self._i2c.read_register(
-            SensorConstants.TMP_B2)
-        temperature_lsb = self._i2c.read_register(
-            SensorConstants.TMP_B1)
-        temperature_xlsb = self._i2c.read_register(
-            SensorConstants.TMP_B0)
+        temperature_data = self._i2c.read_register(SensorConstants.TMP_B2,
+                                                   number_of_bytes=3)
 
-        print(temperature_msb, temperature_lsb, temperature_xlsb)
+        uint_temperature = ((temperature_data[0] << 16)
+                            | (temperature_data[1] << 8)
+                            | temperature_data[2])
 
-        temperature = (temperature_msb << 16) | (
-            temperature_lsb << 8) | temperature_xlsb
-
-        return temperature
+        return self._twos_complement(uint_temperature,
+                                     SensorConstants.TEMPERATURE_BIT_WIDTH)
 
     @property
     def temperature_scale_factor(self):
@@ -509,44 +506,35 @@ class Communicator():
         def coefficients_ready():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.COEF_RDY != 0)
-        self._wait_for_condition_else_timeout(coefficients_ready, 4)
-        c = [None] * 18
-        c[0] = self._i2c.read_register(SensorConstants.C0_11_4)  # 0
-        c[1] = (self._i2c.read_register(SensorConstants.C0_3_0_C1_11_8))
-        c[2] = self._i2c.read_register(SensorConstants.C1_7_0)
-        c[3] = self._i2c.read_register(SensorConstants.C00_19_12)
-        c[4] = self._i2c.read_register(SensorConstants.C00_11_4)
-        c[5] = (
-            self._i2c.read_register(SensorConstants.C00_3_0_C10_19_16))
-        c[6] = self._i2c.read_register(SensorConstants.C10_15_8)
-        c[7] = self._i2c.read_register(SensorConstants.C10_7_0)
-        c[8] = self._i2c.read_register(SensorConstants.C01_15_8)
-        c[9] = self._i2c.read_register(SensorConstants.C01_7_0)
-        c[10] = self._i2c.read_register(SensorConstants.C11_15_8)
-        c[11] = self._i2c.read_register(SensorConstants.C11_7_0)
-        c[12] = self._i2c.read_register(SensorConstants.C20_15_8)
-        c[13] = self._i2c.read_register(SensorConstants.C20_7_0)
-        c[14] = self._i2c.read_register(SensorConstants.C21_15_8)
-        c[15] = self._i2c.read_register(SensorConstants.C21_7_0)
-        c[16] = self._i2c.read_register(SensorConstants.C30_15_8)
-        c[17] = self._i2c.read_register(SensorConstants.C30_7_0)
+        self._wait_for_condition_else_timeout(coefficients_ready,
+                                              4)
 
-        c0 = c[0] << 4 | c[1] >> 4
+        coefficient_data = self._i2c.read_register(SensorConstants.C0_11_4,
+                                                   number_of_bytes=18)
 
-        c1 = (c[1] & 0x0f) << 8 | c[2]
-        c1 = (-4096 | c1) if c1 & 1 << 11 else c1
+        # The data sheet says all of these should be 2's complement, but
+        # some of them are wrong when they're that way.  Bad data sheet.
+        c0 = self._twos_complement(
+            coefficient_data[0] << 4 | coefficient_data[1] >> 4, 12)
 
-        c00 = c[3] << 12 | c[4] << 4 | c[5] >> 4
+        c1 = self._twos_complement(
+            (coefficient_data[1] & 0x0F) << 8 | coefficient_data[2], 12)
 
-        c10 = ((c[5] & 0x0F) << 16) | (c[6] << 8) | c[7]
-        c10_temp = -1048576 if(c[5] & 0x8) else 0
-        c10 = c10 | c10_temp
+        c00 = (coefficient_data[3] << 12
+               | coefficient_data[4] << 4 | coefficient_data[5] >> 4)
 
-        c01 = c[8] << 8 | c[9]
-        c11 = c[10] << 8 | c[11]
-        c20 = c[12] << 8 | c[13]
-        c21 = c[14] << 8 | c[15]
-        c30 = c[16] << 8 | c[17]
+        c10 = self._twos_complement(
+            ((coefficient_data[5] & 0x0F) << 16)
+            | (coefficient_data[6] << 8) | coefficient_data[7], 16)
+        c01 = coefficient_data[8] << 8 | coefficient_data[9]
+        c11 = self._twos_complement(
+            coefficient_data[10] << 8 | coefficient_data[11], 16)
+        c20 = self._twos_complement(
+            coefficient_data[12] << 8 | coefficient_data[13], 16)
+        c21 = self._twos_complement(
+            coefficient_data[14] << 8 | coefficient_data[15], 16)
+        c30 = self._twos_complement(
+            coefficient_data[16] << 8 | coefficient_data[17], 16)
 
         self._calibration_coefficients = (c0, c1,
                                           c00, c10, c01, c11, c20, c21, c30)
@@ -560,10 +548,16 @@ class Communicator():
         def sensor_ready():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.SENSOR_RDY != 0)
-        self._wait_for_condition_else_timeout(sensor_ready, 4)
+        self._wait_for_condition_else_timeout(sensor_ready,
+                                              4,
+                                              expected_delay=0.030)
 
-    def _wait_for_condition_else_timeout(self, condition_function, timeout):
+    def _wait_for_condition_else_timeout(self,
+                                         condition_function,
+                                         timeout,
+                                         expected_delay=0):
         start_time = time.time()
+        time.sleep(expected_delay)
         while not condition_function():
             if time.time() - start_time > timeout:
                 return False
@@ -713,6 +707,8 @@ class SensorConstants():
                                   128: 2088960}
 
     # Some helper constants
+    PRESSURE_BIT_WIDTH = 24
+    TEMPERATURE_BIT_WIDTH = 24
     PRESSURE_RATE_OPTIONS = {1: PRESSURE_RATE_1HZ,
                              2: PRESSURE_RATE_2HZ,
                              4: PRESSURE_RATE_4HZ,
