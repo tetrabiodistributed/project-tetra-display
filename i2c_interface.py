@@ -106,12 +106,14 @@ try:
             self._i2c_address = address
             self._dump_communication = dump_communication
             self._i2c = busio.I2C(board.SCL, board.SDA)
+            self._read_register = -1
             while not self._i2c.try_lock():
                 pass
 
         def close(self):
             self._i2c.unlock()
             self._i2c.deinit()
+            self._read_register = -1
 
         def scan(self):
             return self._i2c.scan()
@@ -138,7 +140,7 @@ try:
 
             if self._dump_communication:
                 print(f"{1000*time.time():.4f} 0x{self._i2c_address:02x}"
-                      " TX -> 0x" + bytes([register, to_write]).hex())
+                      " TX   -> 0x" + bytes([register, to_write]).hex())
 
         def write_data(self, data):
             byte_data = self._int_to_bytearray(data)
@@ -146,14 +148,14 @@ try:
 
             if self._dump_communication:
                 print(f"{1000*time.time():.4f} 0x{self._i2c_address:02x}"
-                      f" TX -> 0x" + byte_data.hex())
+                      f" TX   -> 0x" + byte_data.hex())
 
         def _read(self, register=None, number_of_bytes=1):
             if number_of_bytes < 1:
                 raise ValueError("Cannot read fewer than 1 byte.")
 
             data = bytearray(number_of_bytes)
-            if register is not None:
+            if register is not None and self._read_register != register:
                 byte_register = self._int_to_bytearray(register)
                 self._i2c.writeto(self._i2c_address, byte_register)
             self._i2c.readfrom_into(self._i2c_address,
@@ -161,12 +163,13 @@ try:
                                     end=number_of_bytes)
 
             if self._dump_communication:
-                if register is not None:
+                if register is not None and self._read_register != register:
                     print(f"{1000*time.time():.4f} "
-                          f"0x{self._i2c_address:02x} TX -> 0x"
+                          f"0x{self._i2c_address:02x} TX   -> 0x"
                           + byte_register.hex())
                 print(f"{1000*time.time():.4f} 0x{self._i2c_address:02x}"
-                      f" RX <- 0x{data.hex()}")
+                      f" RX <-   0x{data.hex()}")
+            self._read_register = register
 
             if number_of_bytes == 1:
                 return int(data.hex(), 16)
