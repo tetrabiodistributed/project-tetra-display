@@ -32,10 +32,10 @@ class PressureSensor():
         return self._communicator.is_present()
 
     def set_sampling(self,
-                     pressure_oversample=16,
-                     pressure_sampling_rate=1,
+                     pressure_oversample=1,
+                     pressure_sampling_rate=16,
                      temperature_oversample=1,
-                     temperature_sampling_rate=1):
+                     temperature_sampling_rate=16):
         """Set the amount of oversampling and the sampling rate
 
         Parameters
@@ -204,18 +204,18 @@ class Calibrator():
         raw_temperature : int
             Raw temperature from the sensor.
         """
-        scaled_pressure = raw_pressure / self._pressure_scaling_factor
-        scaled_temperature = (raw_temperature
-                              / self._temperature_scaling_factor)
+        scaled_pressure = float(raw_pressure / self._pressure_scaling_factor)
+        scaled_temperature = float(raw_temperature
+                                   / self._temperature_scaling_factor)
 
-        compensated_pressure0 = (self._c10 +
-                                 (scaled_pressure *
-                                  (self._c20 + scaled_pressure * self._c30)))
-        compensated_pressure1 = scaled_temperature * \
-            scaled_pressure * (self._c11 + scaled_pressure * self._c21)
+        qua2 = (self._c10 +
+                (scaled_pressure *
+                 (self._c20 + scaled_pressure * self._c30)))
+        qua3 = (scaled_temperature * scaled_pressure
+                * (self._c11 + scaled_pressure * self._c21))
         compensated_pressure = (
-            self._c00 + scaled_pressure * compensated_pressure0
-            + scaled_temperature * self._c01 + compensated_pressure1)
+            self._c00 + scaled_pressure * qua2
+            + scaled_temperature * self._c01 + qua3)
         return compensated_pressure
 
     def temperature(self, raw_temperature):
@@ -229,8 +229,7 @@ class Calibrator():
         scaled_temperature = float(raw_temperature
                                    / self._temperature_scaling_factor)
         compensated_temperature = (
-            self._c0 * 0.5 + self._c1 * scaled_temperature
-        )
+            self._c0 * 0.5 + self._c1 * scaled_temperature)
         return compensated_temperature
 
 
@@ -376,20 +375,12 @@ class Communicator():
                              "1, 2, 4, 8, 16, 32, 64, or 128X")
         self._i2c.write_register(SensorConstants.PRS_CFG,
                                  rate_mode | oversample_mode)
-        if oversample > 8:
-            self._i2c.write_register(
-                SensorConstants.CFG_REG,
-                SensorConstants.P_SHIFT
-            )
-        else:
-            new_interrupt_and_fifo_config_state = (
-                self._i2c.read_register(
-                    SensorConstants.CFG_REG
-                ) & (0xff - SensorConstants.P_SHIFT))
-            self._i2c.write_register(
-                SensorConstants.CFG_REG,
-                new_interrupt_and_fifo_config_state
-            )
+
+        # The datasheet says only to do this if oversample > 8, but it
+        # weirdly makes data correct for all values of oversample
+        self._i2c.write_register(
+            SensorConstants.CFG_REG,
+            SensorConstants.P_SHIFT)
 
     def raw_pressure(self):
         """The raw pressuring reading from the sensor.  This needs to
@@ -405,17 +396,15 @@ class Communicator():
                     & SensorConstants.PRS_RDY != 0)
         self._wait_for_condition_else_timeout(pressure_ready, 4)
 
-        pressure_msb = self._i2c.read_register(
-            SensorConstants.PRS_B2)
-        pressure_lsb = self._i2c.read_register(
-            SensorConstants.PRS_B1)
-        pressure_xlsb = self._i2c.read_register(
-            SensorConstants.PRS_B0)
+        pressure_data = self._i2c.read_register(SensorConstants.PRS_B2,
+                                                number_of_bytes=3)
 
-        press_raw0 = (pressure_msb << 16) | (pressure_lsb << 8) | pressure_xlsb
-        press_raw1 = -16777216 if (pressure_msb & 0x80) else 0
-        pressure = press_raw0 | press_raw1
-        return pressure
+        print(pressure_data)
+
+        uint_pressure = ((pressure_data[0] << 16)
+                         | (pressure_data[1] << 8)
+                         | pressure_data[2])
+        return self._twos_complement(uint_pressure, 24)
 
     @property
     def pressure_scale_factor(self):
@@ -464,14 +453,11 @@ class Communicator():
                 SensorConstants.T_SHIFT
             )
         else:
-            new_interrupt_and_fifo_config_state = (
-                self._i2c.read_register(
-                    SensorConstants.CFG_REG)
-            ) & (0xff - SensorConstants.T_SHIFT)
-            self._i2c.write_register(
-                SensorConstants.CFG_REG,
-                new_interrupt_and_fifo_config_state
-            )
+            prs_cfg_state = self._i2c.read_register(SensorConstants.CFG_REG)
+            if prs_cfg_state & SensorConstants.T_SHIFT != 0:
+                self._i2c.write_register(
+                    SensorConstants.CFG_REG,
+                    prs_cfg_state & (0xff - SensorConstants.T_SHIFT))
 
     def raw_temperature(self):
         """The raw temperature reading from the sensor.  This need to
@@ -492,6 +478,9 @@ class Communicator():
             SensorConstants.TMP_B1)
         temperature_xlsb = self._i2c.read_register(
             SensorConstants.TMP_B0)
+
+        print(temperature_msb, temperature_lsb, temperature_xlsb)
+
         temperature = (temperature_msb << 16) | (
             temperature_lsb << 8) | temperature_xlsb
 
