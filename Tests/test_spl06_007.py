@@ -309,9 +309,9 @@ class TestCommunicator(unittest.TestCase):
         self._communicator.set_pressure_sampling(oversample=16,
                                                  rate=1)
         self.assertEqual(self._communicator.pressure_scale_factor,
-                         SensorConstants.COMPENSATION_SCALE_FACTORS[16],
+                         SensorConstants.COMPENSATION_SCALE_FACTORS[1],
                          "Fails to get the correct pressure scaling "
-                         "factor of 253952 for oversampling=16.")
+                         "factor of 524288 for oversampling=1.")
 
     def test_set_pressure_sampling_invalid_oversample(self):
         with self.assertRaises(ValueError,
@@ -333,7 +333,7 @@ class TestCommunicator(unittest.TestCase):
         self.assertEqual(self._communicator.temperature_scale_factor,
                          SensorConstants.COMPENSATION_SCALE_FACTORS[1],
                          "Fails to get the correct temperature scaling "
-                         "factor of 524288 for oversampling=16.")
+                         "factor of 524288 for oversampling=1.")
 
     def test_set_op_mode_undefined(self):
         with self.assertWarns(RuntimeWarning,
@@ -352,9 +352,9 @@ class TestCommunicator(unittest.TestCase):
     def test_set_pressure_sampling_sets_scale_factor(self):
         self._communicator.set_pressure_sampling()
         self.assertEqual(self._communicator.pressure_scale_factor,
-                         253952,
+                         524288,
                          "Fails to get the correct pressure scaling "
-                         "factor of 253952 for oversampling=16.")
+                         "factor of 524288 for oversampling=16.")
 
     def test_set_pressure_sampling_invalid_oversample(self):
         with self.assertRaises(ValueError,
