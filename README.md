@@ -36,6 +36,6 @@ docker build -t zmq_proxy:latest .
 docker run --rm -p 8000:8000 zmq_proxy:latest
 ```
 
-Then open http://localhost:8000 in a browser.  With this, you'll see a webpage which every second updates a table with the current state of the descriptors for each patient (if this is run off of hardware, the data will be random numbers except for Tidal Volume which will be 0.0).  The display ought to look like this.
+Then open http://localhost:8000 in a browser (Safari and Chrome both work well, Firefox does not).  With this, you'll see a webpage which every second updates a table with the current state of the descriptors for each patient (if this is run off of hardware, the data will be random numbers).  The display ought to look like this.
 
 ![display showing inspiratory pressure, tidal volume, PEEP, and PIP for 4 patients](https://cdn.discordapp.com/attachments/610302955521966100/745137321518825523/unknown.png)
