@@ -1,10 +1,11 @@
 from datetime import datetime
 from pytz import timezone, utc
+import math
 
 
 class ProcessSampleData():
     """Parses a file with flow rate, tidal volume, and optionally
-    pressure data.  The expected formats are 
+    pressure data.  The expected formats are
 
     `%f\tSLMx10:%f.2\tTidalVol:%f.2\n`
     with the first number being the floating-point milliseconds since
@@ -20,9 +21,9 @@ class ProcessSampleData():
     """
 
     def __init__(self, path_to_data):
-        self._flow_data_file = open(path_to_data, "r")
-        self._parseData()
-        self._flow_data_file.close()
+        with open(path_to_data, "r") as self._flow_data_file:
+            self._parse_data()
+            self._remove_repeat_data()
 
     def __len__(self):
         return len(self.timestamps)
@@ -58,7 +59,7 @@ class ProcessSampleData():
         """Gives the list of pressures in cmH2O"""
         return self._pressures
 
-    def _parseData(self):
+    def _parse_data(self):
         self._timestamps = []
         self._flow_rates = []
         self._tidal_volumes = []
@@ -84,12 +85,10 @@ class ProcessSampleData():
                             .timestamp() * 1000.0)
 
             self._flow_rates.append(float(splitDatum[1]
-                                          .replace(flow_rate_marker,
-                                                   "")
+                                          .replace(flow_rate_marker, "")
                                           .strip("\n")) / 10)
             self._tidal_volumes.append(float(splitDatum[2]
-                                             .replace(tidal_volume_marker,
-                                                      "")
+                                             .replace(tidal_volume_marker, "")
                                              .strip("\n")))
 
             if (pressure_marker in datum):
@@ -97,3 +96,20 @@ class ProcessSampleData():
                                              .replace(pressure_marker,
                                                       "")
                                              .strip("\n")) / 10)
+
+    def _remove_repeat_data(self):
+        non_repeat_indices = []
+        for i in range(len(self._timestamps)):
+            if (not (math.isclose(self._flow_rates[i],
+                                  self._flow_rates[i-1])
+                     and math.isclose(self._tidal_volumes[i],
+                                      self._tidal_volumes[i-1])
+                     and (math.isclose(self._pressures[i],
+                                       self._pressures[i-1])
+                          if len(self._pressures) > 0 else True))):
+                non_repeat_indices.append(i)
+        self._timestamps = [self._timestamps[i] for i in non_repeat_indices]
+        self._flow_rates = [self._flow_rates[i] for i in non_repeat_indices]
+        self._tidal_volumes = [self._tidal_volumes[i]
+                               for i in non_repeat_indices]
+        self._pressures = [self._pressures[i] for i in non_repeat_indices]
