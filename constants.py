@@ -1,6 +1,9 @@
 # Constants for the display software for the
 # Tetra Biodistributed Ventillator Splitter
 
+DESCRIPTORS = ("Inspiratory Pressure", "Tidal Volume", "PEEP", "PIP")
+DESCRIPTORS_HTML = ("dP", "Tv", "PEEP", "PIP")
+
 NUMBER_OF_PATIENTS = 4
 PRESSURE_SENSOR = "SPL06_007"
 SENSIRION_SENSOR = "SFM3300"

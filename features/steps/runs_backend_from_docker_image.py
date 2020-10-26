@@ -47,9 +47,9 @@ def step_impl(context):
              "expected.")
 
 
-@then("those keys will refer to a dictionary of these descriptors")
+@then("those keys will refer to the descriptors")
 def step_impl(context):
-    for i in range(constants.NUMBER_OF_PATIENTS):
-        for row in context.table:
-            assert row["descriptor"] in context.json[f"patient-{i}"], \
-                "Patient descriptors aren't formatted as expected."
+    assert all(descriptor in context.json[f"patient-{i}"]
+               for i in range(constants.NUMBER_OF_PATIENTS)
+               for descriptor in constants.DESCRIPTORS), \
+        "Patient descriptors aren't formatted as expected."
