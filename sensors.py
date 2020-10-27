@@ -235,7 +235,8 @@ else:
             datum = tuple((self._fake_data.pressures[self._data_index],
                            self._fake_data.flow_rates[self._data_index])
                           for _ in range(NUMBER_OF_PATIENTS))
-            self._data_index += 1
+            self._data_index = ((self._data_index + 1)
+                                % len(self._fake_data.timestamps))
             return datum
 
 
