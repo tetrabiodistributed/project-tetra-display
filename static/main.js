@@ -27,12 +27,15 @@ function drawDataToPage(data) {
     classes_and_descriptors = {"Inspiratory Pressure": "dP",
                                "PEEP": "PEEP",
                                "PIP": "PIP",
-                               "Tidal Volume": "Tv"};
+                               "Tidal Volume": "Tv",
+                               "Flow Rate": "flowRate"};
     for (i = 0; i < 4; ++i) {
         for (const [key, value] of Object.entries(data["patient-" + i])) {
             var descriptorMagnitude = Number(value).toFixed(2);
             dataElement = getElementByXpath("//div[@class='_dataCell patient-" + i + " " + classes_and_descriptors[key] + "']");
-            dataElement.innerHTML = descriptorMagnitude;
+            if (dataElement != null) {
+                dataElement.innerHTML = descriptorMagnitude;
+            }
         }
     }
 }
