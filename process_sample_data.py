@@ -1,6 +1,5 @@
 from datetime import datetime
-import pytz
-from pytz import timezone
+from pytz import timezone, utc
 
 
 class ProcessSampleData():
@@ -36,7 +35,6 @@ class ProcessSampleData():
 
         return self._timestamps
 
-    @property
     def relative_timestamps(self):
         """Gives the list of timestamps data were taken at in
         milliseconds since the first data point
@@ -82,7 +80,7 @@ class ProcessSampleData():
                                       .replace(year=2020,
                                                month=6,
                                                day=9))
-                            .astimezone(pytz.utc)
+                            .astimezone(utc)
                             .timestamp() * 1000.0)
 
             self._flow_rates.append(float(splitDatum[1]

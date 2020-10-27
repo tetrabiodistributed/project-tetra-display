@@ -100,11 +100,12 @@ class TestPressureSensor(unittest.TestCase):
         self._sensor.set_sampling(temperature_sampling_rate=8)
         measured_temperature = self._sensor.temperature()
         standard_temperature = 20  # degC
+        relative_tolerance = 0.50
         self.assertTrue(math.isclose(measured_temperature,
                                      standard_temperature,
-                                     rel_tol=0.50),
+                                     rel_tol=relative_tolerance),
                         f"{measured_temperature} != "
-                        "20 +/- 50% degC :\n"
+                        f"20 ± {int(100*relative_tolerance)}% degC :\n"
                         "Fails to return ambient temperature in "
                         "degC.\nNote that if this test is "
                         "performed in a very cold or hot "
@@ -119,10 +120,11 @@ class TestPressureSensor(unittest.TestCase):
         self._sensor.set_op_mode(PressureSensor.OpMode.command)
         measured_pressure = self._sensor.pressure()
         standard_pressure = 101325  # Pa
+        relative_tolerance = 0.10
         self.assertTrue(math.isclose(measured_pressure, standard_pressure,
-                                     rel_tol=0.10),
+                                     rel_tol=relative_tolerance),
                         f"{measured_pressure} != "
-                        "101325 +/- 10% Pa :\n"
+                        f"101325 ± {int(100*relative_tolerance)}% Pa :\n"
                         "Fails to return ambient pressure in Pa.\n"
                         "Note that if this test is performed in a "
                         "very low pressure environment,\nthe ambient "
@@ -307,9 +309,9 @@ class TestCommunicator(unittest.TestCase):
         self._communicator.set_pressure_sampling(oversample=16,
                                                  rate=1)
         self.assertEqual(self._communicator.pressure_scale_factor,
-                         SensorConstants.COMPENSATION_SCALE_FACTORS[16],
+                         SensorConstants.COMPENSATION_SCALE_FACTORS[1],
                          "Fails to get the correct pressure scaling "
-                         "factor of 253952 for oversampling=16.")
+                         "factor of 524288 for oversampling=1.")
 
     def test_set_pressure_sampling_invalid_oversample(self):
         with self.assertRaises(ValueError,
@@ -331,7 +333,7 @@ class TestCommunicator(unittest.TestCase):
         self.assertEqual(self._communicator.temperature_scale_factor,
                          SensorConstants.COMPENSATION_SCALE_FACTORS[1],
                          "Fails to get the correct temperature scaling "
-                         "factor of 524288 for oversampling=16.")
+                         "factor of 524288 for oversampling=1.")
 
     def test_set_op_mode_undefined(self):
         with self.assertWarns(RuntimeWarning,
@@ -350,9 +352,9 @@ class TestCommunicator(unittest.TestCase):
     def test_set_pressure_sampling_sets_scale_factor(self):
         self._communicator.set_pressure_sampling()
         self.assertEqual(self._communicator.pressure_scale_factor,
-                         253952,
+                         524288,
                          "Fails to get the correct pressure scaling "
-                         "factor of 253952 for oversampling=16.")
+                         "factor of 524288 for oversampling=16.")
 
     def test_set_pressure_sampling_invalid_oversample(self):
         with self.assertRaises(ValueError,
@@ -380,7 +382,7 @@ class TestCommunicator(unittest.TestCase):
                         "Fails to return raw temperature as a 24-bit "
                         "2's complement number.")
 
-    def test_raw_temperature(self):
+    def test_raw_pressure(self):
         self._communicator.set_op_mode(PressureSensor.OpMode.command)
         self._communicator.set_pressure_sampling()
         raw_pressure = self._communicator.raw_pressure()

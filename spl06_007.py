@@ -21,8 +21,8 @@ class PressureSensor():
     def __enter__(self):
         return self._communicator.__enter__()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._communicator.__exit__(exc_type, exc_val, exc_tb)
+    def __exit__(self, type, value, traceback):
+        self._communicator.__exit__(type, value, traceback)
 
     def close(self):
         """Deinitializes and unlocks the I2C bus."""
@@ -32,10 +32,10 @@ class PressureSensor():
         return self._communicator.is_present()
 
     def set_sampling(self,
-                     pressure_oversample=16,
-                     pressure_sampling_rate=1,
+                     pressure_oversample=1,
+                     pressure_sampling_rate=16,
                      temperature_oversample=1,
-                     temperature_sampling_rate=1):
+                     temperature_sampling_rate=16):
         """Set the amount of oversampling and the sampling rate
 
         Parameters
@@ -80,7 +80,6 @@ class PressureSensor():
             oversample=temperature_oversample,
             rate=temperature_sampling_rate
         )
-
         self._calibrator = Calibrator(
             self._communicator.calibration_coefficients,
             self._communicator.pressure_scale_factor,
@@ -205,16 +204,18 @@ class Calibrator():
         raw_temperature : int
             Raw temperature from the sensor.
         """
-        scaled_pressure = raw_pressure / self._pressure_scaling_factor
-        scaled_temperature = (raw_temperature
-                              / self._temperature_scaling_factor)
+        scaled_pressure = float(raw_pressure / self._pressure_scaling_factor)
+        scaled_temperature = float(raw_temperature
+                                   / self._temperature_scaling_factor)
 
-        compensated_pressure0 = self._c10 + (scaled_pressure * (self._c20 + scaled_pressure * self._c30))
-        print('compensated_pressure0 = ',compensated_pressure0)
-        compensated_pressure1 = scaled_temperature * scaled_pressure * (self._c11 + scaled_pressure * self._c21)
-        print('compensated_pressure1 = ',compensated_pressure1)
-        compensated_pressure = self._c00 + scaled_pressure * compensated_pressure0 + scaled_temperature * self._c01 + compensated_pressure1;
-        print('pressure_compensated = ', compensated_pressure)
+        qua2 = (self._c10 +
+                (scaled_pressure *
+                 (self._c20 + scaled_pressure * self._c30)))
+        qua3 = (scaled_temperature * scaled_pressure
+                * (self._c11 + scaled_pressure * self._c21))
+        compensated_pressure = (
+            self._c00 + scaled_pressure * qua2
+            + scaled_temperature * self._c01 + qua3)
         return compensated_pressure
 
     def temperature(self, raw_temperature):
@@ -225,12 +226,10 @@ class Calibrator():
         raw_temperature : int
             Raw temperature from the sensor.
         """
-        scaled_temperature = (raw_temperature
-                              / self._temperature_scaling_factor)
+        scaled_temperature = float(raw_temperature
+                                   / self._temperature_scaling_factor)
         compensated_temperature = (
-            self._c0 * 0.5 + self._c1 * scaled_temperature
-        )
-        print('t_comp = ', compensated_temperature)
+            self._c0 * 0.5 + self._c1 * scaled_temperature)
         return compensated_temperature
 
 
@@ -255,7 +254,7 @@ class Communicator():
     _READY_WAIT_TIME = 0.0036
 
     def __init__(self, SDO_high=True, dump_communication=False):
-        """The sensor takes(107 + /- 8) ms to initialize."""
+        """The sensor takes(107 ± 8) ms to initialize."""
         if SDO_high:
             self._i2c_address = SensorConstants.DEVICE_ADDRESS_SDO_HIGH
         else:
@@ -270,7 +269,7 @@ class Communicator():
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, type, value, traceback):
         self.close()
 
     def close(self):
@@ -320,8 +319,8 @@ class Communicator():
                               RuntimeWarning)
             set_standby = True
         if set_standby:
-            self._i2c.write_register(
-                SensorConstants.MEAS_CFG, SensorConstants.BACKGROUND_PRESSURE_TEMPERATURE)
+            self._i2c.write_register(SensorConstants.MEAS_CFG,
+                                     SensorConstants.STANDBY)
             self._op_mode = PressureSensor.OpMode.standby
             return PressureSensor.OpMode.standby
 
@@ -332,7 +331,7 @@ class Communicator():
         """
         return self._calibration_coefficients
 
-    def set_pressure_sampling(self, oversample=16, rate=1):
+    def set_pressure_sampling(self, oversample=1, rate=16):
         """Set the amount of oversampling and the sampling rate
 
         Parameters
@@ -376,20 +375,12 @@ class Communicator():
                              "1, 2, 4, 8, 16, 32, 64, or 128X")
         self._i2c.write_register(SensorConstants.PRS_CFG,
                                  rate_mode | oversample_mode)
-        if oversample > 8:
-            self._i2c.write_register(
-                SensorConstants.CFG_REG,
-                SensorConstants.PRESSURE_RESULT_BIT_SHIFT
-            )
-        else:
-            new_interrupt_and_fifo_config_state = (
-                self._i2c.read_register(
-                    SensorConstants.CFG_REG
-                ) & (0xff - SensorConstants.PRESSURE_RESULT_BIT_SHIFT))
-            self._i2c.write_register(
-                SensorConstants.CFG_REG,
-                new_interrupt_and_fifo_config_state
-            )
+
+        # The datasheet says only to do this if oversample > 8, but it
+        # weirdly makes data correct for all values of oversample
+        self._i2c.write_register(
+            SensorConstants.CFG_REG,
+            SensorConstants.P_SHIFT)
 
     def raw_pressure(self):
         """The raw pressuring reading from the sensor.  This needs to
@@ -398,38 +389,29 @@ class Communicator():
         if self._op_mode == PressureSensor.OpMode.command:
             self._i2c.write_register(
                 SensorConstants.MEAS_CFG,
-                SensorConstants.BACKGROUND_PRESSURE_TEMPERATURE
-            )
+                SensorConstants.COMMAND_PRESSURE)
 
         def pressure_ready():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.PRS_RDY != 0)
-        self._wait_for_condition_else_timeout(pressure_ready, 4)
+        self._wait_for_condition_else_timeout(
+            pressure_ready, 4, expected_delay=0.020)
 
-        pressure_msb = self._i2c.read_register(
-            SensorConstants.PRS_B2)
-        print('sensor[0] = ', pressure_msb)
-        pressure_lsb = self._i2c.read_register(
-            SensorConstants.PRS_B1)
-        print('sensor[1] = ', pressure_lsb)
-        pressure_xlsb = self._i2c.read_register(
-            SensorConstants.PRS_B0)
-        print('sensor[2] = ', pressure_xlsb)
+        pressure_data = self._i2c.read_register(SensorConstants.PRS_B2,
+                                                number_of_bytes=3)
 
-        press_raw0 = (pressure_msb << 16) | (pressure_lsb << 8) | pressure_xlsb
-        print('press_raw0 = ', press_raw0)
-        press_raw1 = -16777216 if(pressure_msb & 0x80) else 0
-        print('press_raw1 = ', press_raw1)
-        pressure = press_raw0 | press_raw1
-        print('press_raw = ', pressure)
-        return pressure
+        uint_pressure = ((pressure_data[0] << 16)
+                         | (pressure_data[1] << 8)
+                         | pressure_data[2])
+        return self._twos_complement(uint_pressure,
+                                     SensorConstants.PRESSURE_BIT_WIDTH)
 
     @property
     def pressure_scale_factor(self):
         """A constant used for calibrating the sensor."""
         return self._pressure_scale_factor
 
-    def set_temperature_sampling(self, oversample=1, rate=1):
+    def set_temperature_sampling(self, oversample=1, rate=16):
         """Set the amount of oversampling and the sampling rate.
 
         Parameters
@@ -461,22 +443,21 @@ class Communicator():
         except KeyError:
             raise ValueError("Temperature oversampling can only be "
                              "1, 2, 4, 8, 16, 32, 64, or 128X")
-        self._i2c.write_register(SensorConstants.TMP_CFG,
-                                 rate_mode | oversample_mode)
+        self._i2c.write_register(
+            SensorConstants.TMP_CFG,
+            (SensorConstants.TEMPERATURE_SENSOR_EXTERNAL | rate_mode
+             | oversample_mode))
         if oversample > 8:
             self._i2c.write_register(
                 SensorConstants.CFG_REG,
-                SensorConstants.TEMPERATURE_RESULT_BIT_SHIFT
+                SensorConstants.T_SHIFT
             )
         else:
-            new_interrupt_and_fifo_config_state = (
-                self._i2c.read_register(
-                    SensorConstants.CFG_REG)
-            ) & (0xff - SensorConstants.TEMPERATURE_RESULT_BIT_SHIFT)
-            self._i2c.write_register(
-                SensorConstants.CFG_REG,
-                new_interrupt_and_fifo_config_state
-            )
+            prs_cfg_state = self._i2c.read_register(SensorConstants.CFG_REG)
+            if prs_cfg_state & SensorConstants.T_SHIFT != 0:
+                self._i2c.write_register(
+                    SensorConstants.CFG_REG,
+                    prs_cfg_state & (0xff - SensorConstants.T_SHIFT))
 
     def raw_temperature(self):
         """The raw temperature reading from the sensor.  This need to
@@ -484,27 +465,23 @@ class Communicator():
         """
         if self._op_mode == PressureSensor.OpMode.command:
             self._i2c.write_register(SensorConstants.MEAS_CFG,
-                                     SensorConstants.BACKGROUND_PRESSURE_TEMPERATURE)
-
+                                     SensorConstants.COMMAND_TEMPERATURE)
 
         def temperature_ready():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.TMP_RDY != 0)
-        self._wait_for_condition_else_timeout(temperature_ready, 4)
+        self._wait_for_condition_else_timeout(
+            temperature_ready, 4, expected_delay=0.035)
 
-        temperature_msb = self._i2c.read_register(
-            SensorConstants.TMP_B2)
-        print('sensor[3] = ', temperature_msb)
-        temperature_lsb = self._i2c.read_register(
-            SensorConstants.TMP_B1)
-        print('sensor[4] = ', temperature_lsb)
-        temperature_xlsb = self._i2c.read_register(
-            SensorConstants.TMP_B0)
-        print('sensor[5] = ', temperature_xlsb)
-        temperature = (temperature_msb << 16) | (temperature_lsb << 8) | temperature_xlsb
-        print('tempRaw = ', temperature)
+        temperature_data = self._i2c.read_register(SensorConstants.TMP_B2,
+                                                   number_of_bytes=3)
 
-        return temperature
+        uint_temperature = ((temperature_data[0] << 16)
+                            | (temperature_data[1] << 8)
+                            | temperature_data[2])
+
+        return self._twos_complement(uint_temperature,
+                                     SensorConstants.TEMPERATURE_BIT_WIDTH)
 
     @property
     def temperature_scale_factor(self):
@@ -529,58 +506,35 @@ class Communicator():
         def coefficients_ready():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.COEF_RDY != 0)
-        self._wait_for_condition_else_timeout(coefficients_ready, 4)
-        c = [None] * 18
-        c[0] = self._i2c.read_register(SensorConstants.C0_11_4) #0
-        c[1] = (self._i2c.read_register(SensorConstants.C0_3_0_C1_11_8))
-        c[2] = self._i2c.read_register(SensorConstants.C1_7_0)
-        c[3] = self._i2c.read_register(SensorConstants.C00_19_12)
-        c[4] = self._i2c.read_register(SensorConstants.C00_11_4)
-        c[5] = (
-            self._i2c.read_register(SensorConstants.C00_3_0_C10_19_16))
-        c[6] = self._i2c.read_register(SensorConstants.C10_15_8)
-        c[7] = self._i2c.read_register(SensorConstants.C10_7_0)
-        c[8] = self._i2c.read_register(SensorConstants.C01_15_8)
-        c[9] = self._i2c.read_register(SensorConstants.C01_7_0)
-        c[10] = self._i2c.read_register(SensorConstants.C11_15_8)
-        c[11] = self._i2c.read_register(SensorConstants.C11_7_0)
-        c[12] = self._i2c.read_register(SensorConstants.C20_15_8)
-        c[13] = self._i2c.read_register(SensorConstants.C20_7_0)
-        c[14] = self._i2c.read_register(SensorConstants.C21_15_8)
-        c[15] = self._i2c.read_register(SensorConstants.C21_7_0)
-        c[16] = self._i2c.read_register(SensorConstants.C30_15_8)
-        c[17] = self._i2c.read_register(SensorConstants.C30_7_0)
-        print('c = ',' '.join(map(str, c)))
+        self._wait_for_condition_else_timeout(coefficients_ready,
+                                              4)
 
-        def most_significant_nibble(byte): return (byte & 0xf0) >> 4
+        coefficient_data = self._i2c.read_register(SensorConstants.C0_11_4,
+                                                   number_of_bytes=18)
 
-        def least_significant_nibble(byte): return byte & 0x0f
+        # The data sheet says all of these should be 2's complement, but
+        # some of them are wrong when they're that way.  Bad data sheet.
+        c0 = self._twos_complement(
+            coefficient_data[0] << 4 | coefficient_data[1] >> 4, 12)
 
-        c0 = c[0] << 4 | c[1] >> 4; #working... returns 200
+        c1 = self._twos_complement(
+            (coefficient_data[1] & 0x0F) << 8 | coefficient_data[2], 12)
 
-        c1 = (c[1] & 0x0f) << 8 | c[2]
-        c1 = (-4096 | c1) if c1 & 1 << 11 else c1
-        print('c1=',c1)
+        c00 = (coefficient_data[3] << 12
+               | coefficient_data[4] << 4 | coefficient_data[5] >> 4)
 
-        c00 = c[3] << 12 | c[4] << 4 | c[5] >> 4;
-        #c00 = (0xfff00000 | c00) if (c00 & 1 << 19) else c00;
-        print('c00= ',c00)
-
-        c10 = ((c[5] & 0x0F) << 16) | (c[6] << 8) | c[7];
-        c10_temp = -1048576 if(c[5] & 0x8) else 0
-        c10 = c10 | c10_temp
-        print('c10=', c10)
-
-        c01 = c[8] << 8 | c[9];
-        c11 = c[10] << 8 | c[11];
-        c20 = c[12] << 8 | c[13];
-        c21 = c[14] << 8 | c[15];
-        c30 = c[16] << 8 | c[17];
-        print('c01=',c01)
-        print('c11=', c11)
-        print('c20=', c20)
-        print('c21=', c21)
-        print('c30=', c30)
+        c10 = self._twos_complement(
+            ((coefficient_data[5] & 0x0F) << 16)
+            | (coefficient_data[6] << 8) | coefficient_data[7], 16)
+        c01 = coefficient_data[8] << 8 | coefficient_data[9]
+        c11 = self._twos_complement(
+            coefficient_data[10] << 8 | coefficient_data[11], 16)
+        c20 = self._twos_complement(
+            coefficient_data[12] << 8 | coefficient_data[13], 16)
+        c21 = self._twos_complement(
+            coefficient_data[14] << 8 | coefficient_data[15], 16)
+        c30 = self._twos_complement(
+            coefficient_data[16] << 8 | coefficient_data[17], 16)
 
         self._calibration_coefficients = (c0, c1,
                                           c00, c10, c01, c11, c20, c21, c30)
@@ -594,19 +548,23 @@ class Communicator():
         def sensor_ready():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
                     & SensorConstants.SENSOR_RDY != 0)
-        self._wait_for_condition_else_timeout(sensor_ready, 4)
+        self._wait_for_condition_else_timeout(sensor_ready,
+                                              4,
+                                              expected_delay=0.030)
 
-    def _wait_for_condition_else_timeout(self, conditionFunction, timeout):
-
+    def _wait_for_condition_else_timeout(self,
+                                         condition_function,
+                                         timeout,
+                                         expected_delay=0):
         start_time = time.time()
-        while not conditionFunction():
+        time.sleep(expected_delay)
+        while not condition_function():
             if time.time() - start_time > timeout:
                 return False
             time.sleep(self._READY_WAIT_TIME)
         return True
 
     def _twos_complement(self, value, bits):
-
         if (value & (1 << (bits - 1))) != 0:
             complement = (value & (2**bits - 1)) - (1 << bits)
         else:
@@ -657,24 +615,24 @@ class SensorConstants():
     C30_7_0 = 0x21
 
     # Bitmasks to read from registers
-    #   Read these from self._SENSOR_OP_MODE
+    #   Read these from MEAS_CGF
     COEF_RDY = 0b10000000
     SENSOR_RDY = 0b01000000
     TMP_RDY = 0b00100000
     PRS_RDY = 0b00010000
-    #   Read these from self._INTERRUPT_STATUS
+    #   Read these from INT_STS
     INT_FIFO_FULL = 0b00000100
     INT_TMP = 0b00000010
     INT_PRS = 0b00000001
-    #   Read these from self._FIFO_STATUS
+    #   Read these from FIFO_STS
     FIFO_FULL = 0b00000010
     FIFO_EMPTY = 0b00000001
-    #   Read these from self._PRODUCT_AND_REVISION_ID
+    #   Read these from ID
     PROD_ID = 0b11110000
     REV_ID = 0b00001111
 
     # Codes to write to registers
-    #   Write these to self._PRESSURE_CONFIGURATION
+    #   Write these to PRS_CFG
     #   The rate and oversample can bitwise-or'ed together
     PRESSURE_RATE_1HZ = 0b00000000
     PRESSURE_RATE_2HZ = 0b00010000
@@ -692,10 +650,10 @@ class SensorConstants():
     PRESSURE_OVERSAMPLE_32X = 0b00000101
     PRESSURE_OVERSAMPLE_64X = 0b00000110
     PRESSURE_OVERSAMPLE_128X = 0b00000111
-    #   Write these to self._TEMPERATURE_CONFIGURATION
+    #   Write these to TMP_CFG
     #   The sensor, rate, and can be bitwise-or'ed together
-    TEMPERATURE_SENSOR_INTERNAL = 0b10000000
-    TEMPERATURE_SENSOR_EXTERNAL = 0b00000000
+    TEMPERATURE_SENSOR_EXTERNAL = 0b10000000
+    TEMPERATURE_SENSOR_INTERNAL = 0b00000000
     TEMPERATURE_RATE_1HZ = 0b00000000
     TEMPERATURE_RATE_2HZ = 0b00010000
     TEMPERATURE_RATE_4HZ = 0b00100000
@@ -712,26 +670,27 @@ class SensorConstants():
     TEMPERATURE_OVERSAMPLE_32X = 0b00000101
     TEMPERATURE_OVERSAMPLE_64X = 0b00000110
     TEMPERATURE_OVERSAMPLE_128X = 0b00000111
-    #   Write these to self._SENSOR_OP_MODE
+    #   Write these to SensorsConstants.MEAS_CFG
     STANDBY = 0b00000000
     COMMAND_PRESSURE = 0b00000001
     COMMAND_TEMPERATURE = 0b00000010
     BACKGROUND_PRESSURE = 0b00000101
     BACKGROUND_TEMPERATURE = 0b00000110
     BACKGROUND_PRESSURE_TEMPERATURE = 0b00000111
-    #  Read or write these to self._INTERRUPT_AND_FIFO_CONFIGURATION
+    #  Read or write these to CFG_REG
     #  Note: temperature or pressure bit shift must be set when
     #  their respective oversample rates are set to > 8
-    SET_INTERRUPT_ACTIVE_LEVEL = 0b10000000
-    GENERATE_INTERRUPT_WHEN_FIFO_IS_FULL = 0b01000000
-    GENERATE_INTERRUPT_WHEN_PRESSURE_IS_READY = 0b00100000
-    GENERATE_INTERRUPT_WHEN_TEMPERATURE_IS_READY = 0b00010000
-    TEMPERATURE_RESULT_BIT_SHIFT = 0b00001000
-    PRESSURE_RESULT_BIT_SHIFT = 0b00000100
-    ENABLE_FIFO = 0b00000010
-    SET_4_WIRE_SPI = 0b00000000
-    SET_3_WIRE_SPI = 0b00000001
-    #   Write these to self._RESET_AND_FLUSH
+    INT_HL = 0b10000000
+    INT_FIFO = 0b01000000
+    INT_PRS = 0b00100000
+    INT_TMP = 0b00010000
+    T_SHIFT = 0b00001000
+    P_SHIFT = 0b00000100
+    FIFO_EN = 0b00000010
+    SPI_MODE = 0b00000001
+    FOUR_WIRE_SPI = 0b00000000
+    THREE_WIRE_SPI = 0b00000001
+    #   Write these to RESET
     #   They can be bitwise-or'ed together
     FLUSH_FIFO = 0b10000000
     SOFT_RESET = 0b00001001
@@ -748,6 +707,8 @@ class SensorConstants():
                                   128: 2088960}
 
     # Some helper constants
+    PRESSURE_BIT_WIDTH = 24
+    TEMPERATURE_BIT_WIDTH = 24
     PRESSURE_RATE_OPTIONS = {1: PRESSURE_RATE_1HZ,
                              2: PRESSURE_RATE_2HZ,
                              4: PRESSURE_RATE_4HZ,

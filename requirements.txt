@@ -10,3 +10,4 @@ crcmod
 supervisor
 selenium
 pyvirtualdisplay
+scipy
