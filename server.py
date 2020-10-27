@@ -49,17 +49,20 @@ def main():
     sensors = Sensors()
     calculator = Calculator()
     communicator = Communicator()
-    running = True
-    while running:
-        try:
+    try:
+        while True:
             start_time = time.time()
-            calculator.add_datum(sensor_data)
-
-            communicator.publish_message(calculator.get_datum())
+            data = sensors.poll()
+            print(data)
+            calculator.add_datum(data)
+            datum = calculator.get_datum()
+            print(datum)
+            communicator.publish_message(datum)
             while (time.time() - start_time < 1.0):
                 time.sleep(0.1)
-        except:
-            raise
+    finally:
+        sensors.close()
+        communicator.close()
 
 
 if "__main__" == __name__:

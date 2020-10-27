@@ -41,7 +41,7 @@ class PatientTubingDescriptorCalculator():
 
     @property
     def descriptors(self):
-        return {"Inspiratory Pressure": self._most_recent_flow_rate,
+        return {"Inspiratory Pressure": self._most_recent_pressure,
                 "PEEP": self._PEEP(),
                 "PIP": self._PIP(),
                 "Tidal Volume": self._tidal_volume(),
