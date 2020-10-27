@@ -56,9 +56,8 @@ def main():
     sensors = Sensors()
     calculator = Calculator()
     communicator = Communicator()
-    running = True
-    while running:
-        try:
+    try:
+        while True:
             start_time = time.time()
             data = sensors.poll()
             calculator.add_datum(data)
