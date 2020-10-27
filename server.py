@@ -43,6 +43,10 @@ class Communicator():
             self._context.term()
             self._closed = True
 
+    def close(self):
+        self._socket.close()
+        self._context.term()
+
     def publish_message(self, message):
         self._socket.send_multipart([b"",
                                      json.dumps(message).encode("ascii")])
