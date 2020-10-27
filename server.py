@@ -25,17 +25,20 @@ class Calculator():
                                                          time.time())
 
     def get_datum(self):
-        datum = {}
-        for i in range(len(self._calculators)):
-            datum.update({f"patient-{i}": self._calculators[i].descriptors})
-        return datum
+        return {f"patient-{i}": self._calculators[i].descriptors
+                for i in range(len(self._calculators))}
 
 
 class Communicator():
 
     def __init__(self, port=5000):
-        self._socket = zmq.Context().socket(zmq.PUB)
+        self._context = zmq.Context()
+        self._socket = self._context.socket(zmq.PUB)
         self._socket.bind(f"tcp://*:{port}")
+
+    def close(self):
+        self._socket.close()
+        self._context.term()
 
     def publish_message(self, message):
         self._socket.send_multipart([b"",
@@ -44,7 +47,6 @@ class Communicator():
 
 def main():
     sensors = Sensors()
-    sensor_data = sensors.poll()
     calculator = Calculator()
     communicator = Communicator()
     running = True
