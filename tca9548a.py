@@ -3,8 +3,9 @@ from i2c_interface import I2CInterface
 
 class I2CMux():
 
-    def __init__(self, mux_address):
-        self._i2c = I2CInterface(mux_address)
+    def __init__(self, mux_address, dump_communication=False):
+        self._i2c = I2CInterface(mux_address,
+                                 dump_communication=dump_communication)
 
     def close(self):
         self._i2c.close()
