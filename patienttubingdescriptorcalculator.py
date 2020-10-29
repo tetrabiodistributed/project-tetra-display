@@ -2,7 +2,7 @@ import random
 
 from numpy_ringbuffer import RingBuffer
 
-from causal_integral_filter import CausalIntegralFilter
+from tidal_volume import TidalVolume
 from peep_pip import PEEP, PIP
 
 
@@ -12,7 +12,7 @@ class PatientTubingDescriptorCalculator():
         self._flow_rate_sample_times = RingBuffer(2)
         self._flow_rate_sample_times.append(current_time)
 
-        self._tidal_volume_filter = CausalIntegralFilter(0, current_time)
+        self._tidal_volume_filter = TidalVolume(current_time)
         self._peep_filter = PEEP(0.1)
         self._pip_filter = PIP(0.1)
         self._most_recent_pressure = 0.0
@@ -27,8 +27,8 @@ class PatientTubingDescriptorCalculator():
         self._pip_filter.append(datum)
         self._most_recent_pressure = datum
 
-    def add_tidal_volume_value(self, tidal_volume):
-        self._tidal_volume_filter.append_integral_value(tidal_volume)
+    # def add_tidal_volume_value(self, tidal_volume):
+    #     self._tidal_volume_filter.append_integral_value(tidal_volume)
 
     def _PEEP(self):
         return self._peep_filter.get_datum()
