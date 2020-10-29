@@ -20,7 +20,7 @@ class TestTidalVolume(unittest.TestCase):
             return np.maximum(np.sin(t), 0)
 
         def desired_filter_data(t):
-            return np.where(np.sin(t) > 0, np.abs(np.sin(t/2)), 0)
+            return np.where(np.sin(t) > 0, 1-np.cos(t), 0)
 
         normalized_error = filter_rms_error(TidalVolumeTester,
                                             to_filter_data,
@@ -47,8 +47,8 @@ class TestTidalVolume(unittest.TestCase):
             return np.where(
                 ((t % (number_of_cycles_skipped * 2*np.pi / frequency))
                  < (2*np.pi / frequency)),
-                np.where(np.sin(t) > 0,
-                         max_flow_rate * np.abs(np.sin(frequency / 2 * t)),
+                np.where(np.sin(frequency*t) > 0,
+                         max_flow_rate/frequency * (1-np.cos(frequency*t)),
                          0),
                 0)
 
@@ -63,17 +63,6 @@ class TestTidalVolume(unittest.TestCase):
                         "data that is sort of similar to actual "
                         "breathing data.")
 
-    def test_actual_breathing_data(self):
-        normalized_error = filter_rms_error(TidalVolumeTester,
-                                            actual_flow_rates,
-                                            actual_tidal_volumes,
-                                            dt=actual_data_dt,
-                                            start_time=actual_data_start_time,
-                                            end_time=actual_data_end_time)
-        self.assertLess(normalized_error, 1/actual_data_error_safety_factor,
-                        "Fails to correctly calculate tidal volume for "
-                        "actual data")
-
 
 class TidalVolumeTester(TidalVolume):
     def __init__(self, dt):
@@ -84,37 +73,3 @@ class TidalVolumeTester(TidalVolume):
     def append(self, flow_rate):
         self._t += self._dt
         super().append(flow_rate, self._t)
-
-
-flow_rate_data = None
-tidal_volume_data = None
-actual_data_start_time = 0.0
-actual_data_dt = 0.047
-actual_data_end_time = 11.504
-
-
-def get_breathing_data():
-    global flow_rate_data
-    global tidal_volume_data
-    if flow_rate_data is None or tidal_volume_data is None:
-        raw_data = (
-            ProcessSampleData("Tests/TestData/20200609T2358Z_patrickData.txt")
-        )
-        timestamps_in_seconds = [
-            t/100 for t in raw_data.relative_timestamps()]
-        flow_rate_data = interp1d(
-            timestamps_in_seconds,
-            raw_data.flow_rates)
-        tidal_volume_data = interp1d(
-            timestamps_in_seconds,
-            raw_data.tidal_volumes)
-
-
-def actual_flow_rates(t):
-    get_breathing_data()
-    return flow_rate_data(t)
-
-
-def actual_tidal_volumes(t):
-    get_breathing_data()
-    return tidal_volume_data(t)
