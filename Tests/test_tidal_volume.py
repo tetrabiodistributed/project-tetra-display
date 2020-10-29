@@ -73,37 +73,3 @@ class TidalVolumeTester(TidalVolume):
     def append(self, flow_rate):
         self._t += self._dt
         super().append(flow_rate, self._t)
-
-
-flow_rate_data = None
-tidal_volume_data = None
-actual_data_start_time = 0.0
-actual_data_dt = 0.047
-actual_data_end_time = 11.504
-
-
-def get_breathing_data():
-    global flow_rate_data
-    global tidal_volume_data
-    if flow_rate_data is None or tidal_volume_data is None:
-        raw_data = (
-            ProcessSampleData("Tests/TestData/20200609T2358Z_patrickData.txt")
-        )
-        timestamps_in_seconds = [
-            t/100 for t in raw_data.relative_timestamps()]
-        flow_rate_data = interp1d(
-            timestamps_in_seconds,
-            raw_data.flow_rates)
-        tidal_volume_data = interp1d(
-            timestamps_in_seconds,
-            raw_data.tidal_volumes)
-
-
-def actual_flow_rates(t):
-    get_breathing_data()
-    return flow_rate_data(t)
-
-
-def actual_tidal_volumes(t):
-    get_breathing_data()
-    return tidal_volume_data(t)
