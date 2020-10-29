@@ -22,7 +22,7 @@ class TestTidalVolume(unittest.TestCase):
         def desired_filter_data(t):
             return np.where(np.sin(t) > 0, np.abs(np.sin(t/2)), 0)
 
-        normalized_error = filter_rms_error(TidalVolume,
+        normalized_error = filter_rms_error(TidalVolumeTester,
                                             to_filter_data,
                                             desired_filter_data)
         self.assertLess(normalized_error, 1/fake_data_error_safety_factor,
@@ -53,7 +53,7 @@ class TestTidalVolume(unittest.TestCase):
                 0)
 
         normalized_error = filter_rms_error(
-            TidalVolume,
+            TidalVolumeTester,
             to_filter_data,
             desired_filter_data,
             dt=0.125,
@@ -64,7 +64,7 @@ class TestTidalVolume(unittest.TestCase):
                         "breathing data.")
 
     def test_actual_breathing_data(self):
-        normalized_error = filter_rms_error(TidalVolume,
+        normalized_error = filter_rms_error(TidalVolumeTester,
                                             actual_flow_rates,
                                             actual_tidal_volumes,
                                             dt=actual_data_dt,
@@ -73,6 +73,17 @@ class TestTidalVolume(unittest.TestCase):
         self.assertLess(normalized_error, 1/actual_data_error_safety_factor,
                         "Fails to correctly calculate tidal volume for "
                         "actual data")
+
+
+class TidalVolumeTester(TidalVolume):
+    def __init__(self, dt):
+        self._t = 0
+        self._dt = dt
+        super().__init__(self._t)
+
+    def append(self, flow_rate):
+        self._t += self._dt
+        super().append(flow_rate, self._t)
 
 
 flow_rate_data = None
