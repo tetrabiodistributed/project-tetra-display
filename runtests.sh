@@ -13,6 +13,8 @@ exit_code=$(($exit_code + $?))
 
 if [ $exit_code -eq 0 ]; then
     echo "Tests pass! 🎉"
+else
+    echo "Tests failed 🤷"
 fi
 
 exit $exit_code
