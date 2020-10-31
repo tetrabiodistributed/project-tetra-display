@@ -28,6 +28,7 @@ TEMPERATURE_OVERSAMPLING = 1
 
 MAXIMUM_PEEP = 8.23  # cmH2O
 MINIMUM_PIP = 17  # cmH2O
+MINIMUM_TIDAL_VOLUME = 0.01
 
 # Environment variables for testing off of hardware
 SENSOR_QUANTITY = "SENSOR_QUANTITY"
