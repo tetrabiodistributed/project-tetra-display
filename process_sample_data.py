@@ -23,7 +23,6 @@ class ProcessSampleData():
     def __init__(self, path_to_data):
         with open(path_to_data, "r") as self._flow_data_file:
             self._parse_data()
-            self._remove_repeat_data()
 
     def __len__(self):
         return len(self.timestamps)
@@ -68,48 +67,41 @@ class ProcessSampleData():
         tidal_volume_marker = "TidalVol:"
         pressure_marker = "Pressurex10:"
 
+        previous_data = [None, None, math.inf]
         for datum in self._flow_data_file:
             splitDatum = datum.replace(" -> ", "\t").split("\t")
             try:
-                self._timestamps.append(float(splitDatum[0]))
+                current_timestamp = float(splitDatum[0])
             except ValueError:
-                self._timestamps \
-                    .append(timezone("US/Pacific")
-                            .localize(datetime
-                                      .strptime(splitDatum[0],
-                                                "%H:%M:%S.%f")
-                                      .replace(year=2020,
-                                               month=6,
-                                               day=9))
-                            .astimezone(utc)
-                            .timestamp() * 1000.0)
+                current_timestamp = (
+                    timezone("US/Pacific")
+                    .localize(datetime
+                              .strptime(splitDatum[0],
+                                        "%H:%M:%S.%f")
+                              .replace(year=2020,
+                                       month=6,
+                                       day=9))
+                    .astimezone(utc)
+                    .timestamp() * 1000.0)
 
-            self._flow_rates.append(float(splitDatum[1]
-                                          .replace(flow_rate_marker, "")
-                                          .strip("\n")) / 10)
-            self._tidal_volumes.append(float(splitDatum[2]
-                                             .replace(tidal_volume_marker, "")
-                                             .strip("\n")))
+            current_flow_rate = float(splitDatum[1]
+                                      .replace(flow_rate_marker, "")
+                                      .strip("\n")) / 10
+            current_tidal_volume = float(splitDatum[2]
+                                         .replace(tidal_volume_marker, "")
+                                         .strip("\n"))
 
             if (pressure_marker in datum):
-                self._pressures.append(float(splitDatum[3]
-                                             .replace(pressure_marker,
-                                                      "")
-                                             .strip("\n")) / 10)
+                current_pressure = float(splitDatum[3]
+                                         .replace(pressure_marker, "")
+                                         .strip("\n")) / 10
+            else:
+                current_pressure = math.inf
 
-    def _remove_repeat_data(self):
-        non_repeat_indices = []
-        for i in range(len(self._timestamps)):
-            if (not (math.isclose(self._flow_rates[i],
-                                  self._flow_rates[i-1])
-                     and math.isclose(self._tidal_volumes[i],
-                                      self._tidal_volumes[i-1])
-                     and (math.isclose(self._pressures[i],
-                                       self._pressures[i-1])
-                          if len(self._pressures) > 0 else True))):
-                non_repeat_indices.append(i)
-        self._timestamps = [self._timestamps[i] for i in non_repeat_indices]
-        self._flow_rates = [self._flow_rates[i] for i in non_repeat_indices]
-        self._tidal_volumes = [self._tidal_volumes[i]
-                               for i in non_repeat_indices]
-        self._pressures = [self._pressures[i] for i in non_repeat_indices]
+            if ([current_flow_rate, current_tidal_volume, current_pressure]
+                    != previous_data):
+                self._timestamps.append(current_timestamp)
+                self._flow_rates.append(current_flow_rate)
+                self._tidal_volumes.append(current_tidal_volume)
+                if current_pressure != math.inf:
+                    self.pressures.append(current_pressure)
