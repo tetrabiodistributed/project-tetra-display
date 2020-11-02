@@ -499,9 +499,7 @@ class Communicator():
         numbers.
 
         Note: The coefficients read from the coefficient register
-        {c0, c1} 12 bit 2´s complement numbers.
-
-        ported from C+ from https://github.com/DimianZhan/spl06/blob/master/spl06.c
+        {c0, c1} are 12 bit 2´s complement numbers.
         """
         def coefficients_ready():
             return (self._i2c.read_register(SensorConstants.MEAS_CFG)
