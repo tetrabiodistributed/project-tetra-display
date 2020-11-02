@@ -622,8 +622,8 @@ class SensorConstants():
     PRS_RDY = 0b00010000
     #   Read these from INT_STS
     INT_FIFO_FULL = 0b00000100
-    INT_TMP = 0b00000010
-    INT_PRS = 0b00000001
+    INT_STS_TMP = 0b00000010
+    INT_STS_PRS = 0b00000001
     #   Read these from FIFO_STS
     FIFO_FULL = 0b00000010
     FIFO_EMPTY = 0b00000001
