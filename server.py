@@ -41,11 +41,7 @@ class Communicator():
         if not self._closed:
             self._socket.close()
             self._context.term()
-            self._closed = True
-
-    def close(self):
-        self._socket.close()
-        self._context.term()
+            self._close = True
 
     def publish_message(self, message):
         self._socket.send_multipart([b"",
