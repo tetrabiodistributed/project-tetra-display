@@ -21,8 +21,8 @@ class ProcessSampleData():
     """
 
     def __init__(self, path_to_data):
-        with open(path_to_data, "r") as self._flow_data_file:
-            self._parse_data()
+        with open(path_to_data, "r") as flow_data_file:
+            self._parse_data(flow_data_file)
 
     def __len__(self):
         return len(self.timestamps)
@@ -58,7 +58,7 @@ class ProcessSampleData():
         """Gives the list of pressures in cmH2O"""
         return self._pressures
 
-    def _parse_data(self):
+    def _parse_data(self, flow_data_file):
         self._timestamps = []
         self._flow_rates = []
         self._tidal_volumes = []
@@ -68,7 +68,7 @@ class ProcessSampleData():
         pressure_marker = "Pressurex10:"
 
         previous_data = [None, None, math.inf]
-        for datum in self._flow_data_file:
+        for datum in flow_data_file:
             splitDatum = datum.replace(" -> ", "\t").split("\t")
             try:
                 current_timestamp = float(splitDatum[0])
@@ -105,3 +105,6 @@ class ProcessSampleData():
                 self._tidal_volumes.append(current_tidal_volume)
                 if current_pressure != math.inf:
                     self.pressures.append(current_pressure)
+                previous_data = [current_flow_rate,
+                                 current_tidal_volume,
+                                 current_pressure]
