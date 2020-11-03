@@ -63,9 +63,9 @@ class ProcessSampleData():
         self._flow_rates = []
         self._tidal_volumes = []
         self._pressures = []
-        flow_rate_marker = "SLMx10:"
-        tidal_volume_marker = "TidalVol:"
-        pressure_marker = "Pressurex10:"
+        FLOW_RATE_MARKER = "SLMx10:"
+        TIDAL_VOLUME_MARKER = "TidalVol:"
+        PRESSURE_MARKER = "Pressurex10:"
 
         previous_data = [None, None, math.inf]
         for datum in flow_data_file:
@@ -85,15 +85,15 @@ class ProcessSampleData():
                     .timestamp() * 1000.0)
 
             current_flow_rate = float(splitDatum[1]
-                                      .replace(flow_rate_marker, "")
+                                      .replace(FLOW_RATE_MARKER, "")
                                       .strip("\n")) / 10
             current_tidal_volume = float(splitDatum[2]
-                                         .replace(tidal_volume_marker, "")
+                                         .replace(TIDAL_VOLUME_MARKER, "")
                                          .strip("\n"))
 
-            if (pressure_marker in datum):
+            if (PRESSURE_MARKER in datum):
                 current_pressure = float(splitDatum[3]
-                                         .replace(pressure_marker, "")
+                                         .replace(PRESSURE_MARKER, "")
                                          .strip("\n")) / 10
             else:
                 current_pressure = math.inf
