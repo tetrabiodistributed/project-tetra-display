@@ -55,7 +55,9 @@ class ProcessSampleData():
 
     @property
     def pressures(self):
-        """Gives the list of pressures in cmH2O"""
+        """Gives the list of pressures in cmH2O or an empty list if the
+        dataset doesn't have pressure.
+        """
         return self._pressures
 
     def _parse_data(self, flow_data_file):
