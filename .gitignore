@@ -109,3 +109,6 @@ venv.bak/
 
 # Sublime
 sftp-config.json
+
+# macOS
+.DS_Store

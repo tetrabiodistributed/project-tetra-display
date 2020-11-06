@@ -1,10 +1,11 @@
 from datetime import datetime
 from pytz import timezone, utc
+import math
 
 
 class ProcessSampleData():
     """Parses a file with flow rate, tidal volume, and optionally
-    pressure data.  The expected formats are 
+    pressure data.  The expected formats are
 
     `%f\tSLMx10:%f.2\tTidalVol:%f.2\n`
     with the first number being the floating-point milliseconds since
@@ -20,9 +21,8 @@ class ProcessSampleData():
     """
 
     def __init__(self, path_to_data):
-        self._flow_data_file = open(path_to_data, "r")
-        self._parseData()
-        self._flow_data_file.close()
+        with open(path_to_data, "r") as flow_data_file:
+            self._parse_data(flow_data_file)
 
     def __len__(self):
         return len(self.timestamps)
@@ -55,45 +55,58 @@ class ProcessSampleData():
 
     @property
     def pressures(self):
-        """Gives the list of pressures in cmH2O"""
+        """Gives the list of pressures in cmH2O or an empty list if the
+        dataset doesn't have pressure.
+        """
         return self._pressures
 
-    def _parseData(self):
+    def _parse_data(self, flow_data_file):
         self._timestamps = []
         self._flow_rates = []
         self._tidal_volumes = []
         self._pressures = []
-        flow_rate_marker = "SLMx10:"
-        tidal_volume_marker = "TidalVol:"
-        pressure_marker = "Pressurex10:"
+        FLOW_RATE_MARKER = "SLMx10:"
+        TIDAL_VOLUME_MARKER = "TidalVol:"
+        PRESSURE_MARKER = "Pressurex10:"
 
-        for datum in self._flow_data_file:
+        previous_data = [None, None, math.inf]
+        for datum in flow_data_file:
             splitDatum = datum.replace(" -> ", "\t").split("\t")
             try:
-                self._timestamps.append(float(splitDatum[0]))
+                current_timestamp = float(splitDatum[0])
             except ValueError:
-                self._timestamps \
-                    .append(timezone("US/Pacific")
-                            .localize(datetime
-                                      .strptime(splitDatum[0],
-                                                "%H:%M:%S.%f")
-                                      .replace(year=2020,
-                                               month=6,
-                                               day=9))
-                            .astimezone(utc)
-                            .timestamp() * 1000.0)
+                current_timestamp = (
+                    timezone("US/Pacific")
+                    .localize(datetime
+                              .strptime(splitDatum[0],
+                                        "%H:%M:%S.%f")
+                              .replace(year=2020,
+                                       month=6,
+                                       day=9))
+                    .astimezone(utc)
+                    .timestamp() * 1000.0)
 
-            self._flow_rates.append(float(splitDatum[1]
-                                          .replace(flow_rate_marker,
-                                                   "")
-                                          .strip("\n")) / 10)
-            self._tidal_volumes.append(float(splitDatum[2]
-                                             .replace(tidal_volume_marker,
-                                                      "")
-                                             .strip("\n")))
+            current_flow_rate = float(splitDatum[1]
+                                      .replace(FLOW_RATE_MARKER, "")
+                                      .strip("\n")) / 10
+            current_tidal_volume = float(splitDatum[2]
+                                         .replace(TIDAL_VOLUME_MARKER, "")
+                                         .strip("\n"))
 
-            if (pressure_marker in datum):
-                self._pressures.append(float(splitDatum[3]
-                                             .replace(pressure_marker,
-                                                      "")
-                                             .strip("\n")) / 10)
+            if (PRESSURE_MARKER in datum):
+                current_pressure = float(splitDatum[3]
+                                         .replace(PRESSURE_MARKER, "")
+                                         .strip("\n")) / 10
+            else:
+                current_pressure = math.inf
+
+            if ([current_flow_rate, current_tidal_volume, current_pressure]
+                    != previous_data):
+                self._timestamps.append(current_timestamp)
+                self._flow_rates.append(current_flow_rate)
+                self._tidal_volumes.append(current_tidal_volume)
+                if current_pressure != math.inf:
+                    self.pressures.append(current_pressure)
+                previous_data = [current_flow_rate,
+                                 current_tidal_volume,
+                                 current_pressure]

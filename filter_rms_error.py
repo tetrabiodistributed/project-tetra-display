@@ -86,6 +86,7 @@ def filter_rms_error(filter_object,
 
     if generate_plot:
         figure, axis = plt.subplots()
+        axis.plot(t, to_filter_data, label="To Filter Data")
         axis.plot(t, filtered_data, label="Filtered Data")
         axis.plot(t, desired_filtered_data, label="Desired Filtered Data")
         axis.legend()

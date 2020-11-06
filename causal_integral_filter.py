@@ -1,4 +1,4 @@
-from numpy_ringbuffer import RingBuffer
+from ringbuffer import RingBuffer
 
 
 class CausalIntegralFilter():

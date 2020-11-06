@@ -25,17 +25,23 @@ class Calculator():
                                                          time.time())
 
     def get_datum(self):
-        datum = {}
-        for i in range(len(self._calculators)):
-            datum.update({f"patient-{i}": self._calculators[i].descriptors})
-        return datum
+        return {f"patient-{i}": self._calculators[i].descriptors
+                for i in range(len(self._calculators))}
 
 
 class Communicator():
 
     def __init__(self, port=5000):
-        self._socket = zmq.Context().socket(zmq.PUB)
+        self._context = zmq.Context()
+        self._socket = self._context.socket(zmq.PUB)
         self._socket.bind(f"tcp://*:{port}")
+        self._closed = False
+
+    def close(self):
+        if not self._closed:
+            self._socket.close()
+            self._context.term()
+            self._closed = True
 
     def publish_message(self, message):
         self._socket.send_multipart([b"",
@@ -44,20 +50,22 @@ class Communicator():
 
 def main():
     sensors = Sensors()
-    sensor_data = sensors.poll()
     calculator = Calculator()
     communicator = Communicator()
     running = True
     while running:
         try:
             start_time = time.time()
-            calculator.add_datum(sensor_data)
-
-            communicator.publish_message(calculator.get_datum())
+            data = sensors.poll()
+            calculator.add_datum(data)
+            datum = calculator.get_datum()
+            communicator.publish_message(datum)
             while (time.time() - start_time < 1.0):
                 time.sleep(0.1)
-        except:
-            raise
+        except KeyboardInterrupt:
+            running = False
+            sensors.close()
+            communicator.close()
 
 
 if "__main__" == __name__:
