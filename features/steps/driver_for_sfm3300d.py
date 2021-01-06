@@ -4,7 +4,7 @@ import math
 from sfm3300d import FlowSensor
 from tca9548a import I2CMux
 from rpi_check import is_on_raspberry_pi
-import constants
+import tetra_constants
 
 
 @given("an SFM3300-D Flow sensor is connected to hardware")
@@ -17,7 +17,7 @@ def step_impl(context):
 
 @given("the SFM3300-D is initialized")
 def step_impl(context):
-    context.mux = I2CMux(constants.FLOW_SENSOR_MUX_ADDRESS)
+    context.mux = I2CMux(tetra_constants.FLOW_SENSOR_MUX_ADDRESS)
     context.mux.select_channel(1)
     context.flow_sensor = FlowSensor()
 

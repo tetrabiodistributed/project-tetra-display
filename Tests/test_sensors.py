@@ -2,7 +2,7 @@ import unittest
 import time
 
 from sensors import Sensors
-import constants
+import tetra_constants
 
 
 class TestSensors(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestSensors(unittest.TestCase):
 
     def test_all_tubes_have_enough_sensors(self):
         tubes = self._sensors.tubes_with_enough_sensors()
-        for i in range(constants.NUMBER_OF_PATIENTS):
+        for i in range(tetra_constants.NUMBER_OF_PATIENTS):
             with self.subTest(i=i):
                 self.assertIn(i, tubes,
                               f"Port {i} is missing sensors.")

@@ -2,7 +2,7 @@ from behave import given, when, then
 import math
 import os
 
-import constants
+import tetra_constants
 
 
 @given("a file named {file} exists in {static_directory}")
@@ -23,17 +23,17 @@ def step_impl(context):
 def step_impl(context):
     context.expected_values = {
         f"patient-{i}": {descriptor: 0.0
-                         for descriptor in constants.DESCRIPTORS}
-        for i in range(constants.NUMBER_OF_PATIENTS)}
+                         for descriptor in tetra_constants.DESCRIPTORS}
+        for i in range(tetra_constants.NUMBER_OF_PATIENTS)}
     context.browser \
            .execute_script(f"drawDataToPage({context.expected_values})")
 
 
 @then("all the values in the display will correspond to that data packet")
 def step_impl(context):
-    classes_and_descriptors = dict(zip(constants.DESCRIPTORS_HTML,
-                                       constants.DESCRIPTORS))
-    for i in range(constants.NUMBER_OF_PATIENTS):
+    classes_and_descriptors = dict(zip(tetra_constants.DESCRIPTORS_HTML,
+                                       tetra_constants.DESCRIPTORS))
+    for i in range(tetra_constants.NUMBER_OF_PATIENTS):
         for class_label, descriptor in classes_and_descriptors.items():
             context.element = (
                 context.browser
@@ -54,8 +54,8 @@ def step_impl(context):
 def step_impl(context, value, diff_descriptor, patient_number, special_value):
     context.expected_values = {
         f"patient-{i}": {descriptor: value
-                         for descriptor in constants.DESCRIPTORS}
-        for i in range(constants.NUMBER_OF_PATIENTS)}
+                         for descriptor in tetra_constants.DESCRIPTORS}
+        for i in range(tetra_constants.NUMBER_OF_PATIENTS)}
     context.expected_values[f"patient-{patient_number}"][diff_descriptor] = (
         special_value)
     context.browser \

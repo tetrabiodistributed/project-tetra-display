@@ -4,14 +4,14 @@ import math
 from sfm3300d import FlowSensor, Calibrator, Communicator, CRCError
 from tca9548a import I2CMux
 from rpi_check import is_on_raspberry_pi
-import constants
+import tetra_constants
 from i2c_interface import I2CInterface
 
 
 class TestFlowSensor(unittest.TestCase):
 
     def setUp(self):
-        self._mux = I2CMux(constants.FLOW_SENSOR_MUX_ADDRESS)
+        self._mux = I2CMux(tetra_constants.FLOW_SENSOR_MUX_ADDRESS)
         self._mux.select_channel(2)
         self._sensor = FlowSensor()
 
@@ -83,7 +83,7 @@ class TestCalibrator(unittest.TestCase):
 class TestCommunicator(unittest.TestCase):
 
     def setUp(self):
-        self._mux = I2CMux(constants.FLOW_SENSOR_MUX_ADDRESS)
+        self._mux = I2CMux(tetra_constants.FLOW_SENSOR_MUX_ADDRESS)
         self._mux.select_channel(2)
         self._communicator = Communicator()
 

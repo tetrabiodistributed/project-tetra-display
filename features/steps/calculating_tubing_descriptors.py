@@ -1,7 +1,7 @@
 from behave import given, when, then
 
 import server
-import constants
+import tetra_constants
 
 
 @given("there are sensors connected")
@@ -24,5 +24,5 @@ def step_impl(context):
     context.calculator.add_datum(context.sensor_data)
     assert all(descriptor
                in context.calculator.get_datum()[f"patient-{patient_number}"]
-               for descriptor in constants.DESCRIPTORS
-               for patient_number in range(constants.NUMBER_OF_PATIENTS))
+               for descriptor in tetra_constants.DESCRIPTORS
+               for patient_number in range(tetra_constants.NUMBER_OF_PATIENTS))

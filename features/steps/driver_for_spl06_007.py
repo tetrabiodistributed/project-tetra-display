@@ -3,7 +3,7 @@ from behave import given, when, then
 from spl06_007 import PressureSensor
 from tca9548a import I2CMux
 from rpi_check import is_on_raspberry_pi
-import constants
+import tetra_constants
 
 
 @given("an SPL06-007 Pressure sensor is connected to hardware")
@@ -16,7 +16,7 @@ def step_impl(context):
 
 @given("the SPL06-007 is initialized")
 def step_impl(context):
-    context.mux = I2CMux(constants.PRESSURE_SENSOR_MUX_ADDRESS)
+    context.mux = I2CMux(tetra_constants.PRESSURE_SENSOR_MUX_ADDRESS)
     context.mux.select_channel(0)
     context.sensor = PressureSensor()
 
@@ -24,10 +24,10 @@ def step_impl(context):
 @when("you set the sampling parameters")
 def step_impl(context):
     context.sensor.set_sampling(
-        pressure_oversample=constants.PRESSURE_OVERSAMPLING,
-        pressure_sampling_rate=constants.PRESSURE_SAMPLING_RATE,
-        temperature_oversample=constants.TEMPERATURE_OVERSAMPLE,
-        temperature_sampling_rate=constants.TEMPERATURE_SAMPLING_RATE)
+        pressure_oversample=tetra_constants.PRESSURE_OVERSAMPLING,
+        pressure_sampling_rate=tetra_constants.PRESSURE_SAMPLING_RATE,
+        temperature_oversample=tetra_constants.TEMPERATURE_OVERSAMPLE,
+        temperature_sampling_rate=tetra_constants.TEMPERATURE_SAMPLING_RATE)
 
 
 @when("you set the op mode to {mode}")
