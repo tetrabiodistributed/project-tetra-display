@@ -1,7 +1,7 @@
 from scipy import signal
 
 from ringbuffer import RingBuffer
-import tetra_constants
+from tetra_constants import MINIMUM_PIP, MAXIMUM_PEEP
 
 
 class PEEP():
@@ -11,7 +11,7 @@ class PEEP():
 
     def __init__(self,
                  sampling_period,
-                 maximum_peep=tetra_constants.MAXIMUM_PEEP,
+                 maximum_peep=MAXIMUM_PEEP,
                  window_length=5,
                  polynomial_order=3,
                  buffer_length=10):
@@ -53,7 +53,7 @@ class PIP():
 
     def __init__(self,
                  sampling_period,
-                 minimum_pip=tetra_constants.MINIMUM_PIP,
+                 minimum_pip=MINIMUM_PIP,
                  window_length=5,
                  polynomial_order=3,
                  buffer_length=10):

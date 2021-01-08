@@ -1,7 +1,7 @@
 import math
 
 from causal_integral_filter import CausalIntegralFilter
-import tetra_constants
+from tetra_constants import MINIMUM_TIDAL_VOLUME
 
 
 class TidalVolume():
@@ -10,8 +10,7 @@ class TidalVolume():
 
     def append(self, flow_rate, t):
         self._integral_filter.append(flow_rate, t)
-        if math.isclose(flow_rate, 0,
-                        abs_tol=tetra_constants.MINIMUM_TIDAL_VOLUME):
+        if math.isclose(flow_rate, 0, abs_tol=MINIMUM_TIDAL_VOLUME):
             self._integral_filter.append_integral_value(0)
 
     def get_datum(self):

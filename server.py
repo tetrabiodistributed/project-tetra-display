@@ -6,7 +6,7 @@ import zmq
 from patienttubingdescriptorcalculator \
     import PatientTubingDescriptorCalculator
 from sensors import Sensors
-import tetra_constants
+from tetra_constants import NUMBER_OF_PATIENTS
 
 
 class Calculator():
@@ -15,7 +15,7 @@ class Calculator():
 
         self._calculators = (
             tuple(PatientTubingDescriptorCalculator(time.time())
-                  for _ in range(tetra_constants.NUMBER_OF_PATIENTS)))
+                  for _ in range(NUMBER_OF_PATIENTS)))
 
     def add_datum(self, datum):
         for i in range(len(self._calculators)):
