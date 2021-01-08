@@ -4,12 +4,15 @@ import warnings
 
 from sensors import NotEnoughSensors
 import server
-import constants
+from tetra_constants import (SENSOR_QUANTITY,
+                             ENOUGH_SENSORS,
+                             NOT_ENOUGH_SENSORS,
+                             NUMBER_OF_PATIENTS)
 
 
 @given("there is an object that represent the total sensing package")
 def step_impl(context):
-    os.environ[constants.SENSOR_QUANTITY] = constants.ENOUGH_SENSORS
+    os.environ[SENSOR_QUANTITY] = ENOUGH_SENSORS
     context.sensors = server.Sensors()
 
 
@@ -28,24 +31,23 @@ def step_impl(context):
       "airflow sensing")
 def step_impl(context):
     number_of_good_tubes = len(context.sensors.tubes_with_enough_sensors())
-    assert (number_of_good_tubes == constants.NUMBER_OF_PATIENTS), \
+    assert (number_of_good_tubes == NUMBER_OF_PATIENTS), \
            ("Incorrect number of tubes.  "
-            f"{constants.NUMBER_OF_PATIENTS} expected, "
+            f"{NUMBER_OF_PATIENTS} expected, "
             f"{number_of_good_tubes} received")
 
 
 @then("the software will return the state of the sensor to the user.")
 def step_impl(context):
     datum = context.sensors.poll()
-    assert len(datum) == constants.NUMBER_OF_PATIENTS, \
+    assert len(datum) == NUMBER_OF_PATIENTS, \
         ("Not the correct number of data.  "
-         f"{constants.NUMBER_OF_PATIENTS} expected, "
-         f"{len(datum)} received.")
+         f"{NUMBER_OF_PATIENTS} expected, {len(datum)} received.")
 
 
 @given("any tube doesn't have a complete set of working sensors")
 def step_impl(context):
-    os.environ[constants.SENSOR_QUANTITY] = constants.NOT_ENOUGH_SENSORS
+    os.environ[SENSOR_QUANTITY] = NOT_ENOUGH_SENSORS
 
 
 @when("the software diagnostic is run")

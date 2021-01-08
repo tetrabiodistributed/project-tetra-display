@@ -3,7 +3,11 @@ from behave import given, when, then
 from spl06_007 import PressureSensor
 from tca9548a import I2CMux
 from rpi_check import is_on_raspberry_pi
-import constants
+from tetra_constants import (PRESSURE_SENSOR_MUX_ADDRESS,
+                             PRESSURE_OVERSAMPLING,
+                             PRESSURE_SAMPLING_RATE,
+                             TEMPERATURE_OVERSAMPLING,
+                             TEMPERATURE_SAMPLING_RATE)
 
 
 @given("an SPL06-007 Pressure sensor is connected to hardware")
@@ -16,7 +20,7 @@ def step_impl(context):
 
 @given("the SPL06-007 is initialized")
 def step_impl(context):
-    context.mux = I2CMux(constants.PRESSURE_SENSOR_MUX_ADDRESS)
+    context.mux = I2CMux(PRESSURE_SENSOR_MUX_ADDRESS)
     context.mux.select_channel(0)
     context.sensor = PressureSensor()
 
@@ -24,10 +28,10 @@ def step_impl(context):
 @when("you set the sampling parameters")
 def step_impl(context):
     context.sensor.set_sampling(
-        pressure_oversample=constants.PRESSURE_OVERSAMPLING,
-        pressure_sampling_rate=constants.PRESSURE_SAMPLING_RATE,
-        temperature_oversample=constants.TEMPERATURE_OVERSAMPLE,
-        temperature_sampling_rate=constants.TEMPERATURE_SAMPLING_RATE)
+        pressure_oversample=PRESSURE_OVERSAMPLING,
+        pressure_sampling_rate=PRESSURE_SAMPLING_RATE,
+        temperature_oversample=TEMPERATURE_OVERSAMPLING,
+        temperature_sampling_rate=TEMPERATURE_SAMPLING_RATE)
 
 
 @when("you set the op mode to {mode}")
@@ -43,7 +47,7 @@ def step_impl(context):
 
 @then("you can collect temperature data")
 def step_impl(context):
-    absolute_zero_degC = -273.15
+    absolute_zero_degC = -273.15  # degC
     assert context.sensor.temperature() > absolute_zero_degC, \
         "Fails to collect temperature data."
 

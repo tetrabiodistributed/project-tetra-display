@@ -1,7 +1,7 @@
 from scipy import signal
 
 from ringbuffer import RingBuffer
-import constants
+from tetra_constants import MINIMUM_PIP, MAXIMUM_PEEP
 
 
 class PEEP():
@@ -11,7 +11,7 @@ class PEEP():
 
     def __init__(self,
                  sampling_period,
-                 maximum_peep=constants.MAXIMUM_PEEP,
+                 maximum_peep=MAXIMUM_PEEP,
                  window_length=5,
                  polynomial_order=3,
                  buffer_length=10):
@@ -20,7 +20,7 @@ class PEEP():
         ----------
         sampling_period : float
             The amount of time between data samples.
-        maximum_peep=constants.MAXIMUM_PEEP : float
+        maximum_peep=tetra_constants.MAXIMUM_PEEP : float
             The maximum pressure considered to be PEEP.
         window_length=5 : int
             The number of points sampled for a low-pass filter of the
@@ -53,7 +53,7 @@ class PIP():
 
     def __init__(self,
                  sampling_period,
-                 minimum_pip=constants.MINIMUM_PIP,
+                 minimum_pip=MINIMUM_PIP,
                  window_length=5,
                  polynomial_order=3,
                  buffer_length=10):
@@ -62,7 +62,7 @@ class PIP():
         ----------
         sampling_period : float
             The amount of time between data samples.
-        minimum_pip=constants.MINIMUM_PIP : float
+        minimum_pip=tetra_constants.MINIMUM_PIP : float
             The maximum pressure considered to be PIP.
         window_length=5 : int
             The number of points sampled for a low-pass filter of the

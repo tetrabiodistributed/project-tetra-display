@@ -9,13 +9,13 @@ from spl06_007 import (PressureSensor,
 from i2c_interface import I2CInterface
 from tca9548a import I2CMux
 from rpi_check import is_on_raspberry_pi
-import constants
+from tetra_constants import PRESSURE_SENSOR_MUX_ADDRESS
 
 
 class TestPressureSensor(unittest.TestCase):
 
     def setUp(self):
-        self._mux = I2CMux(constants.PRESSURE_SENSOR_MUX_ADDRESS)
+        self._mux = I2CMux(PRESSURE_SENSOR_MUX_ADDRESS)
         self._mux.select_channel(0)
         self._sensor = PressureSensor()
 
@@ -263,7 +263,7 @@ class TestCommunicator(unittest.TestCase):
         warnings.filterwarnings("ignore",
                                 message="unclosed file",
                                 category=ResourceWarning)
-        self._mux = I2CMux(constants.PRESSURE_SENSOR_MUX_ADDRESS)
+        self._mux = I2CMux(PRESSURE_SENSOR_MUX_ADDRESS)
         self._mux.select_channel(0)
         self._communicator = Communicator()
 
