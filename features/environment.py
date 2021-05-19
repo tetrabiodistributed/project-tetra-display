@@ -11,6 +11,7 @@ def before_all(context):
     context.container_tag = "zmq_proxy:latest"
     context.container_name = "zmq_proxy"
     context.image = context.client.images.build(path=".",
+                                                platform="linux/arm/v6",
                                                 tag=context.container_tag)
 
 
