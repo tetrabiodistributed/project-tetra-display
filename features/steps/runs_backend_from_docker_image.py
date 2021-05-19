@@ -15,24 +15,33 @@ def step_impl(context, port):
                                   detach=True,
                                   auto_remove=True,
                                   ports={f"{context.port}": context.port})
-    time.sleep(1.2)  # give the container a moment to start up
+    time.sleep(2.0)  # give the container a moment to start up.
+    # Has a bad code smell, but it takes a second or two for things to start.
+    # Even so, further listening is done in the "I listen for packets" step to
+    # make sure we have good timing once everything's running
 
 
 @when("I listen for packets")
 def step_impl(context):
     uri = f"ws://localhost:{context.port}/ws"
     context.ws = ws_connect_retry(uri)
+    context.first_message = context.ws.recv()  # triggers waiting for the first
+    # message to appear, rather than sleeping for it
 
 
 @then("there will be a JSON packet sent every {t:f} seconds")
 def step_impl(context, t):
     number_of_messages = 5
     start_time = time.time()
+    print(start_time)  # leaving in print statements for later debugging if necessary
     for _ in range(number_of_messages):
         context.message = context.ws.recv()
+        print(context.message, time.time())
     end_time = time.time()
+    print(end_time)
     context.json = json.loads(context.message)
     context.client.containers.get(context.container_name).kill()
+    print ((end_time-start_time)/number_of_messages)
     assert math.isclose((end_time - start_time)/number_of_messages, t,
                         rel_tol=0.15), \
         "Fails to send packets at 1 Hz"
