@@ -2,7 +2,7 @@ matplotlib
 numpy
 numpy_ringbuffer
 behave
-zmq
+pyzmq
 pytz
 docker
 adafruit_blinka
