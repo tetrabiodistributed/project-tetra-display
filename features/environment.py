@@ -10,7 +10,8 @@ def before_all(context):
     context.client = docker.from_env()
     context.container_tag = "zmq_proxy:latest"
     context.container_name = "zmq_proxy"
-    context.image = context.client.images.build(path=".",
+    context.image = context.client.images.build(path=os.path.join(os.path.dirname(__file__), ".."),
+                                                platform="linux/arm/v6",
                                                 tag=context.container_tag)
 
 
