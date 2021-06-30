@@ -33,6 +33,9 @@ RUN go get -x -v github.com/pebbe/zmq4 \
 COPY requirements.txt /src/zmq_proxy
 RUN pip3 install \
         --extra-index-url=https://www.piwheels.org/simple \
+        setuptools \
+    && pip3 install \
+        --extra-index-url=https://www.piwheels.org/simple \
         -r /src/zmq_proxy/requirements.txt
 
 # Copy the Python application files
